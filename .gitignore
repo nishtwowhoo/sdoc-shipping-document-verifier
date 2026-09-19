@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Outputs
+submission.json
+*.log
+
+# Local data bundle + ground truth (offline eval only)
+data/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

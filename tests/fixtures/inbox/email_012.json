@@ -1,0 +1,9 @@
+{
+  "email_id": "012",
+  "from": "hr@company.com",
+  "to": "team@company.com",
+  "subject": "Team lunch this Friday",
+  "date": "2026-09-09",
+  "body": "Hi all, we are having a team lunch at 12pm in the canteen this Friday. Please RSVP.",
+  "attachments": []
+}

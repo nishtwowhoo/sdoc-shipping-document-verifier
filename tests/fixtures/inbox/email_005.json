@@ -1,0 +1,9 @@
+{
+  "email_id": "005",
+  "from": "ops@shippingline.com",
+  "to": "forwarding@agent.com",
+  "subject": "Compare BL with SI for booking 88913",
+  "date": "2026-09-02",
+  "body": "Please compare the attached draft BL with the SI and list any differences.",
+  "attachments": ["email_005_SI.txt", "email_005_BL.txt"]
+}

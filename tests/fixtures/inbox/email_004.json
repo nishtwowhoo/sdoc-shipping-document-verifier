@@ -1,0 +1,9 @@
+{
+  "email_id": "004",
+  "from": "ops@shippingline.com",
+  "to": "forwarding@agent.com",
+  "subject": "Please check the draft BL against the SI",
+  "date": "2026-09-01",
+  "body": "Hi,\nPlease check the draft BL against the Shipping Instruction before we finalize. Compare all fields and confirm there are no discrepancies.\nThanks",
+  "attachments": ["email_004_SI.txt", "email_004_BL.txt"]
+}

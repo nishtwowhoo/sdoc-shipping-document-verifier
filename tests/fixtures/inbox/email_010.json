@@ -1,0 +1,9 @@
+{
+  "email_id": "010",
+  "from": "accounts@client.com",
+  "to": "forwarding@agent.com",
+  "subject": "Invoice payment query",
+  "date": "2026-09-07",
+  "body": "Could you confirm when our invoice #INV-1007 will be paid and share the payment terms?",
+  "attachments": []
+}
