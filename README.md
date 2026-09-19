@@ -1,4 +1,3 @@
-```
 # 🚢 Automated Shipping Document Verification Pipeline
 
 Developed for the **Averis x Monash Hackathon 2026** (Shipping Document Verification Use Case).
@@ -25,7 +24,7 @@ Flagged cases requiring Human-in-the-Loop review with explicit reason codes:
 * `unreadable`: Corrupted, garbled, or empty files.
 * `missing_value`: SI contains unpopulated placeholder values (`???`, `_______`, `TBA`, `N/A`).
 
-### 3. Field Extraction &amp; Discrepancy Matching (Stage 3)
+### 3. Field Extraction & Discrepancy Matching (Stage 3)
 Normalizes label variations (e.g., *Port of Loading* vs. *POL*, *Consignee* vs. *To the Order of*) and compares the 7 required fields:
 1. `shipper`
 2. `consignee`
@@ -39,47 +38,18 @@ Outputs exact side-by-side mismatch lists when discrepancies exist (`status: "MI
 
 ---
 
-## 🏗️ System Architecture &amp; Execution Flow
+## 🏗️ System Architecture & Execution Flow
 
-```
-
-[ Email Inbox (JSON) ] ──► [ Stage 1: Classifier ] ──┬──► Non-BL Request ──► [ status: "OK" ] │ └──► BL\_COMPARISON │ [ Stage 2: Quality &amp; Edge Checks ] │ ├──► Invalid/Missing ──► [ status: "NEEDS\_REVIEW" ] │ [ Stage 3: Field Extraction Engine ] │ ├──► Field Differences ──► [ status: "MISMATCH" ] └──► 100% Field Match ──► [ status: "OK" ]
-
-```
-
----
-
-## ⚙️ Installation &amp; Setup
-
-### Prerequisites
-* Python 3.10+ installed.
-
-### Setup Steps
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/nishtwowhoo/sdoc-shipping-document-verifier.git
-   cd sdoc-shipping-document-verifier
-
-```
-
-1. Run the classification &amp; verification pipeline:
-
-```
-python classify.py
-
-```
-
-1. Inspect generated predictions: The output is saved to `submission.json` following the required evaluation schema.
-
----
-
-## 💻 Tech Stack
-
-* **Language**: Python 3
-* **Libraries**: `json`, `re` (Regular Expressions), `os`, `loader.py`
-* **Data Format**: Standard JSON schema matching `sample_submission.json`
-
-```
-
----
-```
+```text
+[ Email Inbox (JSON) ] ──► [ Stage 1: Classifier ] ──┬──► Non-BL Request ──► [ status: "OK" ]
+                                                      │
+                                                      └──► BL_COMPARISON
+                                                                │
+                                                    [ Stage 2: Quality & Edge Checks ]
+                                                                │
+                                                      ├──► Invalid/Missing ──► [ status: "NEEDS_REVIEW" ]
+                                                      │
+                                                    [ Stage 3: Field Extraction Engine ]
+                                                                │
+                                                      ├──► Field Differences ──► [ status: "MISMATCH" ]
+                                                      └──► 100% Field Match ──► [ status: "OK" ]
