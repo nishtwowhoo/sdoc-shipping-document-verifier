@@ -2,3 +2,5 @@
 *.pyc
 .env
 .vscode/
+# Judge's answer key — never commit (offline eval only)
+ground_truth.json

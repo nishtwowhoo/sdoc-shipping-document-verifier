@@ -1,0 +1,9 @@
+{
+  "email_id": "008",
+  "from": "ops@shippingline.com",
+  "to": "forwarding@agent.com",
+  "subject": "Verify the draft BL against the SI",
+  "date": "2026-09-05",
+  "body": "Kindly compare the draft BL and the SI, the discharge port on the SI may still be pending.",
+  "attachments": ["email_008_SI.txt", "email_008_BL.txt"]
+}

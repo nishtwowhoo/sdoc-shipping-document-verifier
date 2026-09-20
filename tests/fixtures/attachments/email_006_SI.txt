@@ -1,0 +1,11 @@
+SHIPPING INSTRUCTION
+Booking No: 88915
+Date: 2026-09-03
+
+SHIPPER: Alpha Trading Pte Ltd
+CONSIGNEE: Beta Imports GmbH
+NOTIFY PARTY: Gamma Logistics Ltd
+PORT OF LOADING: Singapore
+PORT OF DISCHARGE: Bremerhaven
+CONTAINERS: 2
+GROSS WEIGHT: 12000 kg
