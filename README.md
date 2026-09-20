@@ -1,63 +1,90 @@
-# SDOC Hackathon — participant bundle
+# 🚢 Automated Shipping Document Verification Pipeline
 
-Build a pipeline that reads this inbox and, for each email, decides:
+Developed for the **Averis x Monash Hackathon 2026** (Shipping Document Verification Use Case).
 
-1. **category** — one of `BL_COMPARISON`, `SI_REQUEST`, `INVOICE_QUERY`,
-   `GENERAL`, `SPAM`.
-2. for `BL_COMPARISON` emails, compare the **Shipping Instruction (SI)** against
-   the **draft Bill of Lading (BL)** attachments and report the outcome:
-   - `status`: `OK` (all 7 fields match), `MISMATCH` (≥1 field differs), or
-     `NEEDS_REVIEW` (you cannot decide — unreadable/missing/wrong document).
-   - `has_defect` + `defect_fields` when it's a `MISMATCH`.
-   - `review_reason` when it's `NEEDS_REVIEW`
-     (`wrong_doc_type` | `missing_attachment` | `unreadable` | `missing_value`).
+## 📌 Project Overview
+An automated intake and discrepancy identification engine designed for logistics operations teams. The pipeline processes incoming operational email inboxes, classifies message intents, extracts key shipment details from Shipping Instructions (SI) and draft Bills of Lading (BL), compares the **7 core shipping fields**, and escalates edge cases requiring human review.
 
-The 7 compared fields: **shipper, consignee, notify_party, port_of_loading,
-port_of_discharge, container_count, gross_weight_kg**. Note the SI and BL often
-*label the same field differently* (`Port of Loading` vs `Load Port`) — align by
-meaning, not by header text.
+---
 
-## Quick start
+## 🎯 Key Capabilities
 
-```bash
-# look at one email + its documents
-cat inbox/email_004.json
-cat attachments/email_004_SI.txt
-cat attachments/email_004_BL.txt
+### 1. Intent Classification (Stage 1)
+Automatically categorizes emails into 5 distinct operational buckets:
+* `BL_COMPARISON`: Requests to verify draft Bill of Lading against Shipping Instructions.
+* `SI_REQUEST`: Requests to issue or prepare new Shipping Instructions.
+* `INVOICE_QUERY`: Billing, tax invoice, or payment-related inquiries.
+* `GENERAL`: Standard operational correspondence and updates.
+* `SPAM`: Unsolicited promotional or irrelevant emails.
 
-# or use the loader (stdlib only for the .txt path)
-python3 -c "from loader import Inbox; ib=Inbox('.'); print(len(ib.emails()),'emails')"
+### 2. Edge-Case Escalation Engine (Stage 2 - `NEEDS_REVIEW`)
+Flagged cases requiring Human-in-the-Loop review with explicit reason codes:
+* `wrong_doc_type`: Attached document is a Commercial Invoice, Packing List, or non-BL file.
+* `missing_attachment`: Comparison requested but draft BL attachment is missing.
+* `unreadable`: Corrupted, garbled, or empty files.
+* `missing_value`: SI contains unpopulated placeholder values (`???`, `_______`, `TBA`, `N/A`).
+
+### 3. Field Extraction & Discrepancy Matching (Stage 3)
+Normalizes label variations (e.g., *Port of Loading* vs. *POL*, *Consignee* vs. *To the Order of*) and compares the 7 required fields:
+1. `shipper`
+2. `consignee`
+3. `notify_party`
+4. `port_of_loading`
+5. `port_of_discharge`
+6. `container_count`
+7. `gross_weight_kg`
+
+Outputs exact side-by-side mismatch lists when discrepancies exist (`status: "MISMATCH"`).
+
+---
+
+## 🏗️ System Architecture & Execution Flow
+
+```text
+[ Email Inbox (JSON) ] ──► [ Stage 1: Classifier ] ──┬──► Non-BL Request ──► [ status: "OK" ]
+                                                      │
+                                                      └──► BL_COMPARISON
+                                                                │
+                                                    [ Stage 2: Quality & Edge Checks ]
+                                                                │
+                                                   ├──► Invalid/Missing ──► [ status: "NEEDS_REVIEW" ]
+
+```
+---
+
+## ⚙️ Installation &amp; Setup
+
+### Prerequisites
+
+* Python 3.10+ installed.
+
+### Setup Steps
+
+1. Clone this repository:
+
+```
+git clone https://github.com/nishtwowhoo/sdoc-shipping-document-verifier.git
+cd sdoc-shipping-document-verifier
+
 ```
 
-```python
-from loader import Inbox
-inbox = Inbox(".")                     # this folder  (or a server URL)
-submission = {}
-for email in inbox:
-    eid = email["email_id"]
-    # ... your classify + extract + compare pipeline ...
-    submission[eid] = {
-        "category": "BL_COMPARISON",
-        "status": "MISMATCH",
-        "review_reason": None,
-        "has_defect": True,
-        "defect_fields": ["consignee"],
-    }
-import json; json.dump(submission, open("submission.json", "w"), indent=2)
+1. Run the classification &amp; verification pipeline:
+
+```
+python classify.py
+
 ```
 
-Match **`sample_submission.json`** exactly (every email_id present).
+1. Inspect generated predictions: The output is saved to `submission.json` following the required evaluation schema.
+                                                      │
+                                                    [ Stage 3: Field Extraction Engine ]
+                                                                │
+                                                      ├──► Field Differences ──► [ status: "MISMATCH" ]
+                                                      └──► 100% Field Match ──► [ status: "OK" ]
+---
 
-## Scoring
+## 💻 Tech Stack
 
-You don't have the ground truth. Either:
-- the organizers run `score_cli.py submission.json` for you, **or**
-- if they gave you the HTTP server URL:
-  ```python
-  inbox = Inbox("http://<host>:8080")
-  print(inbox.submit(submission)["final_score"])
-  ```
-
-Final score = 50% end-to-end (defects caught all the way through) + 30% Stage-1
-macro-F1 + 20% Stage-3 defect-F1. `NEEDS_REVIEW` handling is reported as a
-separate reliability axis.
+* **Language**: Python 3
+* **Libraries**: `json`, `re` (Regular Expressions), `os`, `loader.py`
+* **Data Format**: Standard JSON schema matching `sample_submission.json`
