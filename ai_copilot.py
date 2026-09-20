@@ -1,9 +1,19 @@
 import os
-import openai
+import streamlit as st
 
-#initialize client // ensure openai api key environtment variable is set
+try:
+  import google.generativeai as genai
 
-client = openai.OpenAI()
+  HAS_GEMINI = True
+except ImportError:
+  HAS_GEMINI = False
+
+
+def get_gemini_key() -> str:
+  if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+    return st.secrets["GEMINI_API_KEY"]
+  return os.environ.get("GEMINI_API_KEY", "")
+
 
 def ask_hitl_assistant(
     user_query: str,
@@ -13,42 +23,33 @@ def ask_hitl_assistant(
     bl_text: str,
     pipeline_results: dict,
 ) -> str:
-    """Context-aware AI Copilot for Human-in-the-Loop inspection."""
-    
-    system_prompt = f"""
-    You are an expert Shipping Operations AI Copilot assisting human operators in inspecting flagged emails.
-    
-    ### CONTEXT FOR EMAIL INSPECTION {email_id}:
-    - Subject: {email_meta.get('subject', '')}
-    - From: {email_meta.get('from', '')}
-    - Email Body: {email_meta.get('body', '')}
-    
-    ### PIPELINE PREDICTION:
-    - Status: {pipeline_results.get('status')}
-    - Category: {pipeline_results.get('category')}
-    - Review Reason: {pipeline_results.get('review_reason', '')}
-    - Defect Fields: {pipeline_results.get('defect_fields', '')}
-    
-    ### ATTACHED DOCUMENTS:
-    --- SHIPPING INSTRUCTION (SI) ---
-    {si_text if si_text else "No SI document text found."}
-    
-    --- BILL OF LADING (BL) ---
-    {bl_text if bl_text else "No BL document text found."}
-    
-    INSTRUCTIONS:
-        Answer the human operator's questions accurately based on the source text above.
-        If a field is missing or ambiguous, explain why and recommend whether the operator should mark it as OK, MISMATCH, or keep it in NEEDS_REVIEW.'
-        """
-        
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_query}
-        ],
-        temperature=0.2,
-        max_tokens=500
+  api_key = get_gemini_key()
+
+  if not HAS_GEMINI or not api_key:
+    return (
+        f"💡 **[Mock Copilot Mode — Gemini Key Not Found]**\n\n"
+        f"Query for `{email_id}`: \"{user_query}\"\n\n"
+        f"*Add `GEMINI_API_KEY` to `.streamlit/secrets.toml` to activate live Gemini responses.*"
     )
 
-    return response.choices[0].message.content
+  genai.configure(api_key=api_key)
+
+  system_prompt = f"""
+    You are an expert Shipping Operations AI Copilot assisting human operators in inspecting flagged emails.
+    Email ID: {email_id}
+    Subject: {email_meta.get('subject', '')}
+    Body: {email_meta.get('body', '')}
+    Status: {pipeline_results.get('status')}
+    Review Reason: {pipeline_results.get('review_reason')}
+    Defect Fields: {pipeline_results.get('defect_fields')}
+    
+    SI Text: {si_text[:2000]}
+    BL Text: {bl_text[:2000]}
+    """
+
+  model = genai.GenerativeModel(
+      model_name="gemini-1.5-flash", system_instruction=system_prompt
+  )
+
+  response = model.generate_content(user_query)
+  return response.text
