@@ -15,8 +15,8 @@
   },
   "email_003": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -26,6 +26,7 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
+      "consignee",
       "notify_party"
     ]
   },
@@ -38,20 +39,20 @@
   },
   "email_006": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_007": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_008": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -87,20 +88,22 @@
   },
   "email_013": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "port_of_discharge"
+    ]
   },
   "email_014": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_015": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -108,8 +111,8 @@
   },
   "email_016": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -122,41 +125,41 @@
   },
   "email_018": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_019": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_020": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_021": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_022": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_023": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -171,10 +174,13 @@
   },
   "email_025": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count",
+      "port_of_discharge"
+    ]
   },
   "email_026": {
     "category": "GENERAL",
@@ -184,28 +190,28 @@
     "defect_fields": []
   },
   "email_027": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_028": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_029": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_030": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -213,10 +219,13 @@
   },
   "email_031": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count",
+      "gross_weight_kg"
+    ]
   },
   "email_032": {
     "category": "BL_COMPARISON",
@@ -228,7 +237,7 @@
     ]
   },
   "email_033": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -244,7 +253,7 @@
     ]
   },
   "email_035": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -252,8 +261,8 @@
   },
   "email_036": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -266,13 +275,13 @@
   },
   "email_038": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_039": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -293,7 +302,7 @@
     "defect_fields": []
   },
   "email_042": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -301,10 +310,12 @@
   },
   "email_043": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count"
+    ]
   },
   "email_044": {
     "category": "BL_COMPARISON",
@@ -333,8 +344,8 @@
   },
   "email_047": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -347,15 +358,15 @@
   },
   "email_049": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_050": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -381,7 +392,7 @@
     "defect_fields": []
   },
   "email_054": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -404,7 +415,7 @@
     ]
   },
   "email_057": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -433,8 +444,8 @@
   },
   "email_061": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -447,8 +458,8 @@
   },
   "email_063": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -467,18 +478,19 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "port_of_discharge"
     ]
   },
   "email_066": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_067": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -511,7 +523,9 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "container_count",
+      "notify_party",
+      "port_of_discharge"
     ]
   },
   "email_072": {
@@ -522,7 +536,7 @@
     "defect_fields": []
   },
   "email_073": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -536,14 +550,14 @@
     "defect_fields": []
   },
   "email_075": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_076": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -551,8 +565,8 @@
   },
   "email_077": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -564,7 +578,7 @@
     "defect_fields": []
   },
   "email_079": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -572,15 +586,15 @@
   },
   "email_080": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_081": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -599,7 +613,7 @@
     "defect_fields": []
   },
   "email_084": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -628,13 +642,13 @@
   },
   "email_088": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_089": {
-    "category": "SI_REQUEST",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -655,25 +669,26 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
+      "container_count",
       "notify_party"
     ]
   },
   "email_092": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_093": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_094": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -681,8 +696,8 @@
   },
   "email_095": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -703,7 +718,7 @@
     "defect_fields": []
   },
   "email_098": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -718,13 +733,13 @@
   },
   "email_100": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_101": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -738,7 +753,7 @@
     "defect_fields": []
   },
   "email_103": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -753,13 +768,13 @@
   },
   "email_105": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_106": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -781,13 +796,13 @@
   },
   "email_109": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_110": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -795,10 +810,12 @@
   },
   "email_111": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count"
+    ]
   },
   "email_112": {
     "category": "INVOICE_QUERY",
@@ -818,8 +835,8 @@
   },
   "email_114": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -831,14 +848,14 @@
     "defect_fields": []
   },
   "email_116": {
-    "category": "INVOICE_QUERY",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_117": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -857,11 +874,12 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "port_of_loading"
     ]
   },
   "email_120": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -869,13 +887,15 @@
   },
   "email_121": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "gross_weight_kg"
+    ]
   },
   "email_122": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -889,14 +909,14 @@
     "defect_fields": []
   },
   "email_124": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_125": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -910,7 +930,7 @@
     "defect_fields": []
   },
   "email_127": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -918,27 +938,33 @@
   },
   "email_128": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "gross_weight_kg",
+      "port_of_loading"
+    ]
   },
   "email_129": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "port_of_discharge",
+      "port_of_loading"
+    ]
   },
   "email_130": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_131": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -953,20 +979,22 @@
   },
   "email_133": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "gross_weight_kg"
+    ]
   },
   "email_134": {
-    "category": "INVOICE_QUERY",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_135": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -974,20 +1002,20 @@
   },
   "email_136": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_137": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_138": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1001,7 +1029,7 @@
     "defect_fields": []
   },
   "email_140": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1009,13 +1037,13 @@
   },
   "email_141": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_142": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1030,10 +1058,13 @@
   },
   "email_144": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "consignee",
+      "container_count"
+    ]
   },
   "email_145": {
     "category": "BL_COMPARISON",
@@ -1041,7 +1072,8 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "shipper"
     ]
   },
   "email_146": {
@@ -1059,14 +1091,14 @@
     "defect_fields": []
   },
   "email_148": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_149": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1080,7 +1112,7 @@
     "defect_fields": []
   },
   "email_151": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1088,8 +1120,8 @@
   },
   "email_152": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1101,7 +1133,7 @@
     "defect_fields": []
   },
   "email_154": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1115,14 +1147,14 @@
     "defect_fields": []
   },
   "email_156": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_157": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1130,13 +1162,13 @@
   },
   "email_158": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_159": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1151,27 +1183,27 @@
   },
   "email_161": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_162": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_163": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_164": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1185,7 +1217,7 @@
     "defect_fields": []
   },
   "email_166": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1199,7 +1231,7 @@
     "defect_fields": []
   },
   "email_168": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1227,7 +1259,7 @@
     "defect_fields": []
   },
   "email_172": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1246,7 +1278,8 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "port_of_discharge"
     ]
   },
   "email_175": {
@@ -1258,13 +1291,13 @@
   },
   "email_176": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_177": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1272,10 +1305,12 @@
   },
   "email_178": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count"
+    ]
   },
   "email_179": {
     "category": "INVOICE_QUERY",
@@ -1292,7 +1327,7 @@
     "defect_fields": []
   },
   "email_181": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1300,13 +1335,16 @@
   },
   "email_182": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count",
+      "port_of_discharge"
+    ]
   },
   "email_183": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1328,15 +1366,15 @@
   },
   "email_186": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_187": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1349,15 +1387,15 @@
   },
   "email_189": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_190": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1369,21 +1407,21 @@
     "defect_fields": []
   },
   "email_192": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_193": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_194": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1391,13 +1429,13 @@
   },
   "email_195": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_196": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1423,8 +1461,8 @@
   },
   "email_199": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1436,14 +1474,14 @@
     "defect_fields": []
   },
   "email_201": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_202": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1464,7 +1502,7 @@
     "defect_fields": []
   },
   "email_205": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1479,8 +1517,8 @@
   },
   "email_207": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1492,7 +1530,7 @@
     "defect_fields": []
   },
   "email_209": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1500,8 +1538,8 @@
   },
   "email_210": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1527,7 +1565,7 @@
     "defect_fields": []
   },
   "email_214": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1548,7 +1586,7 @@
     "defect_fields": []
   },
   "email_217": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1562,7 +1600,7 @@
     "defect_fields": []
   },
   "email_219": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1570,20 +1608,20 @@
   },
   "email_220": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_221": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_222": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1591,8 +1629,8 @@
   },
   "email_223": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1609,6 +1647,7 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
+      "consignee",
       "notify_party"
     ]
   },
@@ -1629,7 +1668,7 @@
     ]
   },
   "email_228": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1637,8 +1676,8 @@
   },
   "email_229": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1657,14 +1696,14 @@
     "defect_fields": []
   },
   "email_232": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_233": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1693,8 +1732,8 @@
   },
   "email_237": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1713,7 +1752,7 @@
     "defect_fields": []
   },
   "email_240": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1728,8 +1767,8 @@
   },
   "email_242": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1741,21 +1780,21 @@
     "defect_fields": []
   },
   "email_244": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_245": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_246": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1763,8 +1802,8 @@
   },
   "email_247": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1784,20 +1823,20 @@
   },
   "email_250": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_251": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_252": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1830,11 +1869,13 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "port_of_discharge",
+      "shipper"
     ]
   },
   "email_257": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1849,13 +1890,13 @@
   },
   "email_259": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_260": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1863,8 +1904,8 @@
   },
   "email_261": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1877,13 +1918,13 @@
   },
   "email_263": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_264": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1891,13 +1932,13 @@
   },
   "email_265": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_266": {
-    "category": "SI_REQUEST",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -1930,13 +1971,14 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "port_of_discharge"
     ]
   },
   "email_271": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -1969,28 +2011,28 @@
     "defect_fields": []
   },
   "email_276": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_277": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_278": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_279": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2005,20 +2047,20 @@
   },
   "email_281": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_282": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_283": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2054,20 +2096,20 @@
   },
   "email_288": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_289": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_290": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2082,13 +2124,13 @@
   },
   "email_292": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_293": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2102,7 +2144,7 @@
     "defect_fields": []
   },
   "email_295": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2118,7 +2160,7 @@
     ]
   },
   "email_297": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2133,8 +2175,8 @@
   },
   "email_299": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2147,8 +2189,8 @@
   },
   "email_301": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2175,13 +2217,13 @@
   },
   "email_305": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_306": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2195,7 +2237,7 @@
     "defect_fields": []
   },
   "email_308": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2203,20 +2245,20 @@
   },
   "email_309": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_310": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_311": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2228,7 +2270,8 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "shipper"
     ]
   },
   "email_313": {
@@ -2260,7 +2303,7 @@
     "defect_fields": []
   },
   "email_317": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2268,20 +2311,20 @@
   },
   "email_318": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_319": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_320": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2289,20 +2332,20 @@
   },
   "email_321": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_322": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_323": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2310,10 +2353,13 @@
   },
   "email_324": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count",
+      "shipper"
+    ]
   },
   "email_325": {
     "category": "GENERAL",
@@ -2324,13 +2370,13 @@
   },
   "email_326": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_327": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2344,7 +2390,7 @@
     "defect_fields": []
   },
   "email_329": {
-    "category": "INVOICE_QUERY",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2380,10 +2426,13 @@
   },
   "email_334": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "consignee",
+      "shipper"
+    ]
   },
   "email_335": {
     "category": "BL_COMPARISON",
@@ -2395,7 +2444,7 @@
     ]
   },
   "email_336": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2403,27 +2452,27 @@
   },
   "email_337": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_338": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_339": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_340": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2431,8 +2480,8 @@
   },
   "email_341": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2442,18 +2491,19 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
+      "container_count",
       "notify_party"
     ]
   },
   "email_343": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_344": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2498,8 +2548,8 @@
   },
   "email_350": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2511,14 +2561,14 @@
     "defect_fields": []
   },
   "email_352": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_353": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2539,35 +2589,35 @@
     "defect_fields": []
   },
   "email_356": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_357": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_358": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_359": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_360": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2579,18 +2629,20 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "gross_weight_kg",
+      "notify_party",
+      "port_of_discharge"
     ]
   },
   "email_362": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_363": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2613,7 +2665,7 @@
     "defect_fields": []
   },
   "email_366": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2629,7 +2681,7 @@
     ]
   },
   "email_368": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2643,14 +2695,14 @@
     "defect_fields": []
   },
   "email_370": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_371": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2685,7 +2737,7 @@
     "defect_fields": []
   },
   "email_376": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2711,11 +2763,12 @@
     "review_reason": null,
     "has_defect": true,
     "defect_fields": [
-      "notify_party"
+      "notify_party",
+      "shipper"
     ]
   },
   "email_380": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2723,8 +2776,8 @@
   },
   "email_381": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2744,15 +2797,15 @@
   },
   "email_384": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_385": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2764,14 +2817,14 @@
     "defect_fields": []
   },
   "email_387": {
-    "category": "INVOICE_QUERY",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_388": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2799,21 +2852,21 @@
     "defect_fields": []
   },
   "email_392": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_393": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_394": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2827,14 +2880,14 @@
     "defect_fields": []
   },
   "email_396": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_397": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2848,14 +2901,14 @@
     "defect_fields": []
   },
   "email_399": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_400": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2863,8 +2916,8 @@
   },
   "email_401": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -2883,7 +2936,7 @@
     "defect_fields": []
   },
   "email_404": {
-    "category": "INVOICE_QUERY",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2928,10 +2981,12 @@
   },
   "email_410": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "port_of_loading"
+    ]
   },
   "email_411": {
     "category": "BL_COMPARISON",
@@ -2948,7 +3003,7 @@
     "defect_fields": []
   },
   "email_413": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -2970,10 +3025,12 @@
   },
   "email_416": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "gross_weight_kg"
+    ]
   },
   "email_417": {
     "category": "INVOICE_QUERY",
@@ -2991,8 +3048,8 @@
   },
   "email_419": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3005,8 +3062,8 @@
   },
   "email_421": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3019,15 +3076,15 @@
   },
   "email_423": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_424": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3040,13 +3097,16 @@
   },
   "email_426": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count",
+      "port_of_discharge"
+    ]
   },
   "email_427": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3060,14 +3120,14 @@
     "defect_fields": []
   },
   "email_429": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_430": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3082,13 +3142,13 @@
   },
   "email_432": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_433": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3110,20 +3170,20 @@
   },
   "email_436": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_437": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_438": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3138,13 +3198,13 @@
   },
   "email_440": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_441": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3152,13 +3212,13 @@
   },
   "email_442": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_443": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3166,8 +3226,8 @@
   },
   "email_444": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3180,27 +3240,27 @@
   },
   "email_446": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_447": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_448": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_449": {
-    "category": "INVOICE_QUERY",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3215,8 +3275,8 @@
   },
   "email_451": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3236,8 +3296,8 @@
   },
   "email_454": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3250,8 +3310,8 @@
   },
   "email_456": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3271,8 +3331,8 @@
   },
   "email_459": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3298,7 +3358,7 @@
     "defect_fields": []
   },
   "email_463": {
-    "category": "INVOICE_QUERY",
+    "category": "GENERAL",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3313,20 +3373,20 @@
   },
   "email_465": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_466": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_467": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3334,20 +3394,23 @@
   },
   "email_468": {
     "category": "BL_COMPARISON",
-    "status": "OK",
+    "status": "MISMATCH",
     "review_reason": null,
-    "has_defect": false,
-    "defect_fields": []
+    "has_defect": true,
+    "defect_fields": [
+      "container_count",
+      "port_of_loading"
+    ]
   },
   "email_469": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_470": {
-    "category": "GENERAL",
+    "category": "SPAM",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3382,7 +3445,7 @@
     "defect_fields": []
   },
   "email_475": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3390,20 +3453,20 @@
   },
   "email_476": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_477": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_478": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3418,8 +3481,8 @@
   },
   "email_480": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3432,8 +3495,8 @@
   },
   "email_482": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3447,14 +3510,14 @@
     ]
   },
   "email_484": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_485": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3462,13 +3525,13 @@
   },
   "email_486": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
   "email_487": {
-    "category": "INVOICE_QUERY",
+    "category": "SI_REQUEST",
     "status": "OK",
     "review_reason": null,
     "has_defect": false,
@@ -3513,8 +3576,8 @@
   },
   "email_493": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3527,8 +3590,8 @@
   },
   "email_495": {
     "category": "BL_COMPARISON",
-    "status": "NEEDS_REVIEW",
-    "review_reason": "missing_attachment",
+    "status": "OK",
+    "review_reason": null,
     "has_defect": false,
     "defect_fields": []
   },
@@ -3570,9 +3633,9 @@
     "defect_fields": []
   },
   "email_501": {
-    "category": "INVOICE_QUERY",
-    "status": "OK",
-    "review_reason": null,
+    "category": "BL_COMPARISON",
+    "status": "NEEDS_REVIEW",
+    "review_reason": "wrong_doc_type",
     "has_defect": false,
     "defect_fields": []
   },
@@ -3641,36 +3704,36 @@
   },
   "email_511": {
     "category": "BL_COMPARISON",
-    "status": "OK",
-    "review_reason": null,
+    "status": "NEEDS_REVIEW",
+    "review_reason": "unreadable",
     "has_defect": false,
     "defect_fields": []
   },
   "email_512": {
     "category": "BL_COMPARISON",
     "status": "NEEDS_REVIEW",
-    "review_reason": "missing_value",
+    "review_reason": "unreadable",
     "has_defect": false,
     "defect_fields": []
   },
   "email_513": {
     "category": "BL_COMPARISON",
     "status": "NEEDS_REVIEW",
-    "review_reason": "missing_value",
+    "review_reason": "unreadable",
     "has_defect": false,
     "defect_fields": []
   },
   "email_514": {
     "category": "BL_COMPARISON",
-    "status": "OK",
-    "review_reason": null,
+    "status": "NEEDS_REVIEW",
+    "review_reason": "unreadable",
     "has_defect": false,
     "defect_fields": []
   },
   "email_515": {
     "category": "BL_COMPARISON",
-    "status": "OK",
-    "review_reason": null,
+    "status": "NEEDS_REVIEW",
+    "review_reason": "unreadable",
     "has_defect": false,
     "defect_fields": []
   },
