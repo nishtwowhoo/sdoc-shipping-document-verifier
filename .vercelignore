@@ -1,0 +1,9 @@
+# Runtime files are served from the committed api/_snapshot/snapshot.json —
+# raw inbox/attachments are only needed for local pipeline runs and snapshot
+# rebuilds, not for serving traffic.
+inbox/
+attachments/
+tests/
+Dockerfile
+.dockerignore
+*.bak

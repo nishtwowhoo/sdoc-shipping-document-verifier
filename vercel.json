@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/**/*.py": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/index.html", "destination": "/api/index" },
+    { "source": "/email/:eid", "destination": "/api/emailpage?eid=:eid" },
+    { "source": "/score", "destination": "/api/scorepage" },
+    { "source": "/export", "destination": "/api/export" },
+    { "source": "/api/score", "destination": "/api/scorejson" },
+    { "source": "/api/email", "destination": "/api/emailjson" },
+    { "source": "/api/hitl/explain", "destination": "/api/hitl_explain" },
+    { "source": "/api/draft/approve", "destination": "/api/draft_approve" },
+    { "source": "/api/revert-all", "destination": "/api/revert_all" },
+    { "source": "/api/hitl/status", "destination": "/api/hitl_status" }
+  ],
+  "env": {
+    "HITL_REQUIRE_SUPABASE": "1"
+  }
+}

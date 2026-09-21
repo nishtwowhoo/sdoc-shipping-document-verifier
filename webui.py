@@ -129,26 +129,27 @@ def _ui_metrics(r: dict, extra: dict) -> dict:
             metrics.append(("Parsed", f"{parsed}/{n_docs}", pct, "green" if pct == 100 else "amber"))
             if parsed == n_docs and si:
                 nf = sum(1 for v in si["fields"].values() if v)
-                metrics.append(("Extracted", f"{nf}/7", int(nf / 7 * 100), "teal"))
+                tone = "green" if nf == 7 else ("amber" if nf >= 5 else "rose")
+                metrics.append(("Extracted", f"{nf}/7", int(nf / 7 * 100), tone))
         if st == "MISMATCH":
             n = len(r["defect_fields"])
-            metrics.append(("Defects", str(n), min(100, n * 15), "amber" if n else "green"))
+            metrics.append(("Defects", str(n), min(100, n * 15), "rose" if n else "green"))
         metrics = metrics[:3]
 
         if st == "OK":
-            fid = ("100%", "Fields match", "teal")
+            fid = ("100%", "Fields match", "green")
         elif st == "MISMATCH":
-            fid = ("100%", f"{len(r['defect_fields'])} defect(s) flagged", "amber")
+            fid = ("100%", f"{len(r['defect_fields'])} defect(s) flagged", "rose")
         else:
             fid = ("100%", (r["review_reason"] or "escalated").replace("_", " "), "amber")
         return {"pills": pills, "channels": n_docs, "metrics": metrics, "fid": fid}
 
     pct = round(conf * 100)
-    col = "teal" if pct >= 80 else "amber"
+    col = "green" if pct >= 80 else "amber"
     metrics = [("Confidence", f"{pct}%", pct, col), ("Rules", "1/1", 100, "green")]
     fid = {
-        "SI_REQUEST": (f"{pct}%", "Routing confidence", "teal"),
-        "INVOICE_QUERY": (f"{pct}%", "Matching", "teal"),
+        "SI_REQUEST": (f"{pct}%", "Routing confidence", "green"),
+        "INVOICE_QUERY": (f"{pct}%", "Matching", "green"),
         "GENERAL": ("50%", "Fallback", "grey"),
         "SPAM": ("100%", "Blocked", "green"),
     }[cat]
@@ -223,8 +224,8 @@ def _svg_color(tone: str) -> str:
 
 
 _HEX = {
-    "teal": "#0E8090", "green": "#2FA36B", "amber": "#E8971B",
-    "grey": "#7C8AA0", "rose": "#E4574D",
+    "teal": "#06A6A6", "green": "#3BB273", "amber": "#E8971B",
+    "grey": "#94A3B8", "rose": "#E4574D",
 }
 
 _KIND_LABEL = {
@@ -705,7 +706,6 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:0;background:no
 .breadcrumb{font-size:12px;color:var(--muted)}
 .breadcrumb b{color:var(--text);font-weight:500}
 .title{font-size:20px;font-weight:600;margin:2px 0 0;display:flex;align-items:center;gap:10px}
-.title select{font-size:16px;font-weight:600;color:var(--teal);border:0;outline:0;background:none;cursor:pointer}
 .topbar .sp{flex:1}
 .btn{height:34px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:500;
 cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:var(--surface);
@@ -856,8 +856,7 @@ _CLASSIC_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
     <div class="topbar">
       <div>
         <div class="breadcrumb">Waybill Copilot <b>›</b> All emails</div>
-        <div class="title">Inbox for
-          <select><option>bundle</option><option>local data</option></select></div>
+        <div class="title">Inbox</div>
       </div>
       <div class="sp"></div>
       @SW@
@@ -922,20 +921,19 @@ class ClassicTheme(Theme):
             '<button class="morefilters" id="f-more">{sld} More filters</button>'
             "</div>"
             '<div class="help">Showing <b id="count">0</b> of '
-            f'<b>{st["total"]}</b> emails · data: <b>{_esc(app.data_dir)}</b></div>'
+            f'<b>{st["total"]}</b> emails</div>'
         ).format(sg=_svg("search", 14), cl=_svg("calendar", 14), sld=_svg("sliders", 14))
         table = """
-<table><thead><tr>
-<th class="th-email">Email</th><th>Category</th><th>Status</th><th>Reason</th><th>Source</th>
+<div style="overflow-x:auto"><table><thead><tr>
+<th class="th-email">Email</th><th>Category</th><th>Status</th><th>Reason</th>
 <th>Performance</th><th>Fidelity</th><th class="th-end">Actions</th>
-</tr></thead><tbody id="rows"></tbody></table>"""
-        src_txt = _esc(os.path.basename(app.data_dir.rstrip("/\\")) or (app.data_dir if len(app.data_dir) <= 12 else app.data_dir[:12]))
+</tr></thead><tbody id="rows"></tbody></table></div>"""
         file_icon = _svg("clip", 13)
         dots_icon = _svg("more", 18)
         script = """
 <script>
 const esc=s=>(s+'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const ICON_DOTS=`@@DOTS@@`,ICON_FILE=`@@FILE@@`,SRC=@@SRC@@;
+const ICON_DOTS=`@@DOTS@@`,ICON_FILE=`@@FILE@@`;
 const toneColor=t=>({'teal':'var(--teal)','green':'var(--green)','amber':'var(--amber)','grey':'#B6C0CC','rose':'#e0483e'}[t]||'var(--teal)');
 let data=[], state={cat:'',status:'',q:''};
 async function load(){data=await (await fetch('/api/emails')).json();render();}
@@ -962,7 +960,6 @@ function render(){
       `<td class="cell-txt">${esc(r.category)}</td>`+
       `<td class="cell-txt"><span class="dot ${stClass}"></span>${esc(r.status)}</td>`+
       `<td class="cell-mut">${esc(reason)}</td>`+
-      `<td class="cell-mut">${SRC}</td>`+
       `<td style="min-width:170px">${metrics}</td>`+
       `<td style="min-width:110px"><div class="fid" style="color:${toneColor(u.fid[2])}">${esc(u.fid[0])}`+
       `<div class="cap">${esc(u.fid[1])}</div></div></td>`+
@@ -994,7 +991,6 @@ document.addEventListener('DOMContentLoaded',()=>{
             script
             .replace("@@DOTS@@", dots_icon.replace("\\", "\\\\"))
             .replace("@@FILE@@", file_icon.replace("\\", "\\\\"))
-            .replace("@@SRC@@", json.dumps(src_txt))
         )
         body = "<div class=\"tabs\">" + "".join(tabs) + "</div>" + fil + table + script
         return body
@@ -1111,7 +1107,6 @@ display:flex;align-items:center;gap:9px;transition:background .12s,color .12s}
 .breadcrumb{font-size:12.5px;color:var(--muted)}
 .breadcrumb b{color:var(--ink);font-weight:600}
 .title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin:3px 0 0;display:flex;align-items:center;gap:10px}
-.title select{font-size:17px;font-weight:800;color:var(--brand);border:0;outline:0;background:none;cursor:pointer}
 .btn{height:37px;padding:0 15px;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;
 display:inline-flex;align-items:center;gap:8px;background:var(--face);color:var(--ink-2);
 transition:transform .12s,box-shadow .12s,border-color .12s,color .12s}
@@ -1135,9 +1130,9 @@ cursor:pointer;box-shadow:var(--sh-sm);position:relative;overflow:hidden;text-al
 .kpi .bar i{display:block;height:100%;border-radius:99px;transition:width .4s ease}
 /* --- filters --- */
 .filters{display:flex;align-items:center;gap:10px;margin:16px 0 10px;flex-wrap:wrap}
-.filter-wrap{position:relative}
+.filter-wrap{position:relative;flex:1 1 220px;min-width:0;max-width:340px}
 .filter-wrap .sr{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);display:flex;pointer-events:none}
-.filter-wrap input{height:39px;width:300px;border:1px solid var(--line);border-radius:11px;background:#fff;
+.filter-wrap input{height:39px;width:100%;border:1px solid var(--line);border-radius:11px;background:#fff;
 padding:0 14px 0 38px;font-size:13.5px;color:var(--ink);outline:0;transition:border-color .15s,box-shadow .15s}
 .filter-wrap input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(14,115,144,.12)}
 select.field{height:39px;border:1px solid var(--line);border-radius:11px;background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="%2364748B" fill="none" stroke-width="1.5"/></svg>') no-repeat right 12px center;
@@ -1149,8 +1144,8 @@ select.field:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(14,115,14
 .reset.on{display:inline-flex}
 .reset:hover{color:var(--bad)}
 /* --- table --- */
-.tbl{background:var(--face);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow:hidden}
-table{width:100%;border-collapse:collapse}
+.tbl{background:var(--face);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow-x:auto}
+table{width:100%;min-width:920px;border-collapse:collapse}
 thead th{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);text-align:left;
 padding:14px 18px 12px;border-bottom:1px solid var(--line);background:#FBFCFE;white-space:nowrap}
 tbody td{padding:16px 18px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -1227,7 +1222,8 @@ border-bottom:1px solid var(--line);background:#FBFCFE}
 .diff .st.naucol{color:#8F5B00;background:#FDF2DC;padding:3px 10px;border-radius:99px}
 .docgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 18px}
 @media (max-width:900px){.side{display:none}}
-@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.filter-wrap input{width:100%}}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.filter-wrap{flex:1 1 100%;max-width:none}select.field{flex:1 1 140px;min-width:0}}
+@media (max-width:700px){.content{padding:0 16px 40px}.dtitle{font-size:17px}.card{padding:16px}.tbl{border-radius:10px}}
 """
 
 _MODERN_SIDEBAR_LINKS = [
@@ -1278,8 +1274,7 @@ _MODERN_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
     <div class="topbar">
       <div>
         <div class="breadcrumb">Waybill Copilot <b>›</b> All emails</div>
-        <div class="title">Inbox
-          <select><option>bundle</option><option>local data</option></select></div>
+        <div class="title">Inbox</div>
       </div>
       <div class="sp"></div>
       @SW@
@@ -1367,25 +1362,22 @@ class ModernTheme(Theme):
             '<div class="sp"></div>'
             '<button class="reset" id="f-reset">' + _svg("x", 12) + ' Clear filters</button>'
             '</div>'
-            f'<div style="font-size:12px;color:var(--muted);margin-bottom:10px">data: '
-            f'<b style="color:var(--ink-2)">{_esc(app.data_dir)}</b></div>'
         )
 
         table = (
             '<div class="tbl"><table><thead><tr>'
-            '<th>Email</th><th>Category</th><th>Status</th><th>Reason</th><th>Source</th>'
+            '<th>Email</th><th>Category</th><th>Status</th><th>Reason</th>'
             '<th>Performance</th><th>Fidelity</th><th style="text-align:right">Actions</th>'
             '</tr></thead><tbody id="rows"></tbody></table></div>'
         )
 
-        src_txt = _esc(os.path.basename(app.data_dir.rstrip("/\\")) or (app.data_dir if len(app.data_dir) <= 12 else app.data_dir[:12]))
         file_icon = _svg("clip", 13)
         dots_icon = _svg("zoom", 17)
         script = """
 <script>
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const enc=id=>encodeURIComponent(id);
-const ICON_DOTS=`@@DOTS@@`,ICON_FILE=`@@FILE@@`,SRC=@@SRC@@;
+const ICON_DOTS=`@@DOTS@@`,ICON_FILE=`@@FILE@@`;
 const toneColor=t=>({'teal':'#06A6A6','green':'#3BB273','amber':'#E8971B','grey':'#94A3B8','rose':'#E4574D'}[t]||'#06A6A6');
 let data=[], state={cat:'',status:'',q:''};
 async function load(){data=await (await fetch('/api/emails')).json();render();}
@@ -1418,7 +1410,6 @@ function render(){
       `<td class="cell"><button class="cat-link" data-cat="${esc(r.category)}">${esc(r.category)}</button></td>`+
       `<td><span class="badge ${cls}"><span class="dot"></span>${esc(r.status)}</span></td>`+
       `<td class="cell-mut">${esc(reason)}</td>`+
-      `<td class="cell-mut">${SRC}</td>`+
       `<td style="min-width:190px;max-width:230px">${metrics}</td>`+
       `<td style="min-width:120px"><div class="fid" style="color:${toneColor(u.fid[2])}">${esc(u.fid[0])}`+
       `<div class="cap">${esc(u.fid[1])}</div></div></td>`+
@@ -1458,7 +1449,6 @@ document.addEventListener('DOMContentLoaded',()=>{
             script
             .replace("@@DOTS@@", dots_icon.replace("\\", "\\\\"))
             .replace("@@FILE@@", file_icon.replace("\\", "\\\\"))
-            .replace("@@SRC@@", json.dumps(src_txt))
         )
         return kpis + fil + table + script
 
@@ -1546,9 +1536,10 @@ document.addEventListener('DOMContentLoaded',()=>{
             if si and bl:
                 diff = (
                     '<div class="card"><h3>SI vs draft BL · field comparison</h3>'
+                    '<div style="overflow-x:auto">'
                     '<table class="diff"><thead><tr>'
                     '<th>Field</th><th>Shipping Instruction</th><th>Bill of Lading</th><th>Verdict</th>'
-                    '</tr></thead><tbody>' + self._diff_rows(res, d) + '</tbody></table></div>'
+                    '</tr></thead><tbody>' + self._diff_rows(res, d) + '</tbody></table></div></div>'
                 )
 
         pipeline = (

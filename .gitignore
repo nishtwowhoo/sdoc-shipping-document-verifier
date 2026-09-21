@@ -4,3 +4,5 @@
 .vscode/
 # Judge's answer key — never commit (offline eval only)
 ground_truth.json
+# Local HITL fallback (human overrides) — don't commit
+hitl_overrides.json
