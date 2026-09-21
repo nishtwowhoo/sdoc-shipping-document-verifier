@@ -936,7 +936,19 @@ const esc=s=>(s+'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"
 const ICON_DOTS=`@@DOTS@@`,ICON_FILE=`@@FILE@@`;
 const toneColor=t=>({'teal':'var(--teal)','green':'var(--green)','amber':'var(--amber)','grey':'#B6C0CC','rose':'#e0483e'}[t]||'var(--teal)');
 let data=[], state={cat:'',status:'',q:''};
-async function load(){data=await (await fetch('/api/emails')).json();render();}
+async function load(){
+  const el=document.getElementById('rows');
+  const show_err=m=>{ if(el) el.innerHTML='<tr><td colspan="7"><div class="cell-mut">Couldn\\'t load emails: '+esc(m)+' <button class="btn ghost" onclick="load()">Retry</button></div></td></tr>'; };
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const r=await fetch('/api/emails');
+      const txt=await r.text();
+      try{ data=JSON.parse(txt); }
+      catch(e){ if(attempt===0) continue; show_err('server returned non-JSON (HTTP '+r.status+'): '+txt.slice(0,120)); return; }
+      render(); return;
+    }catch(e){ if(attempt===1) show_err((e&&e.message)||e); }
+  }
+}
 function dots(id){return `<button class="threed" title="view details" onclick="location='/email/${id}'">${ICON_DOTS}</button>`;}
 function render(){
   const rows=data.filter(r=>state.cat?r.category===state.cat:true)
@@ -949,6 +961,7 @@ function render(){
   const el=document.getElementById('rows');
   el.innerHTML=rows.map(r=>{
     const u=r.ui;
+    if(!u||!u.pills) return '';
     const pills=u.pills.map(p=>`<span class="pill ${p[1]}">${esc(p[0])}</span>`).join('');
     const chans=Array.from({length:Math.max(1,u.channels)}).fill(ICON_FILE).join('&nbsp;&nbsp;');
     const metrics=u.metrics.map(m=>`<div class="met"><div class="mt"><span>${esc(m[0])}</span><b>${esc(m[1])}</b></div>`+
@@ -1380,7 +1393,19 @@ const enc=id=>encodeURIComponent(id);
 const ICON_DOTS=`@@DOTS@@`,ICON_FILE=`@@FILE@@`;
 const toneColor=t=>({'teal':'#06A6A6','green':'#3BB273','amber':'#E8971B','grey':'#94A3B8','rose':'#E4574D'}[t]||'#06A6A6');
 let data=[], state={cat:'',status:'',q:''};
-async function load(){data=await (await fetch('/api/emails')).json();render();}
+async function load(){
+  const el=document.getElementById('rows');
+  const show_err=m=>{ if(el) el.innerHTML='<tr><td colspan="7"><div class="cell-mut">Couldn\\'t load emails: '+esc(m)+' <button class="btn ghost" onclick="load()">Retry</button></div></td></tr>'; };
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const r=await fetch('/api/emails');
+      const txt=await r.text();
+      try{ data=JSON.parse(txt); }
+      catch(e){ if(attempt===0) continue; show_err('server returned non-JSON (HTTP '+r.status+'): '+txt.slice(0,120)); return; }
+      render(); return;
+    }catch(e){ if(attempt===1) show_err((e&&e.message)||e); }
+  }
+}
 function mkbar(metrics){
   return metrics.map(m=>`<div class="met"><div class="mt"><span>${esc(m[0])}</span><b>${esc(m[1])}</b></div>`+
     `<div class="bar"><i style="width:${m[2]}%;background:${toneColor(m[3])}"></i></div></div>`).join('');
