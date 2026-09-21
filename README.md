@@ -48,7 +48,7 @@ Shipping operations involve handling a large number of emails and documents, inc
 
 Manually reviewing these documents can be time-consuming and prone to human error, especially when operators need to identify discrepancies between multiple documents.
 
-The **SDOC Shipping Document Verifier** was built for the **Averis x Monash Hackathon 2026** to automate this verification process. Rather than only displaying an error on screen, the system acts as an active operational copilot: it reads the shipping inbox, verifies the paperwork, and drafts the reply for every problem it finds.
+The **Waybill Copilot** was built for the **Averis x Monash Hackathon 2026** to automate this verification process. Rather than only displaying an error on screen, the system acts as an active operational copilot: it reads the shipping inbox, verifies the paperwork, and drafts the reply for every problem it finds.
 
 The system:
 
@@ -255,12 +255,13 @@ sdoc-shipping-document-verifier/
 
 | Category | Details |
 |---|---|
-| **Language** | Python 3.12+ |
-| **Dashboard** | Streamlit (`app.py`) |
-| **AI / LLM** | Google Gemini API (`ai_copilot.py`) |
-| **Containerisation** | Docker / Docker Compose, served at `http://localhost:8080` |
-| **Data & Utilities** | Pandas, PyPDF / OCR, Python standard library |
-
+| **Language** | Python 3.11 / 3.12+ |
+| **Document Processing** | pypdf (PDF), python-docx (DOCX), openpyxl (XLSX) |
+| **AI / LLM** | Google Gemini API (`hitl.py`) |
+| **Dashboard** | Streamlit (`webui.py`) |
+| **Deployment** | Docker (Dockerfile, Python 3.11-slim) + Vercel serverless (`api/`, stdlib-only prebuilt snapshot) |
+| **Data Storage** | Supabase (`hitl_reviews` table), with local JSON fallback (`hitl_overrides.json`) |
+ 
 ---
 
 ## 🚧 Challenges Faced
