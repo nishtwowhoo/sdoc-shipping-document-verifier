@@ -123,7 +123,7 @@ def send(handler, code: int, body: bytes, ctype: str) -> None:
 
 
 def send_json(handler, obj, code: int = 200) -> None:
-    send(handler, code, json.dumps(obj, ensure_ascii=False).encode("utf-8"),
+    send(handler, code, json.dumps(obj, ensure_ascii=False, default=str).encode("utf-8"),
          "application/json; charset=utf-8")
 
 
