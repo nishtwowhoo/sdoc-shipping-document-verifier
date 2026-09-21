@@ -1,15 +1,17 @@
 <div align="center">
 
-# 🚢 Waybill Copilot 
+# 🚢 Waybill Copilot
 
-# An Automated Shipping Document Verification Pipeline
+### A Cloud-Native, AI-Powered Shipping Document Verifier
 
-**Reads the shipping inbox, verifies the paperwork, and drafts the reply for every problem it finds.**
+**Reads the shipping inbox, verifies the paperwork with AI, and drafts the reply for every problem it finds — with a human in the loop.**
 
-![Python](https://img.shields.io/badge/Python-3.12%2B-C20C20?logo=python&logoColor=white)
-![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-3776AB?logo=googlegemini&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
+![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![Docker](https://img.shields.io/badge/Containerized-Docker-2496ED?logo=docker&logoColor=white)
+![Vercel](https://img.shields.io/badge/Cloud-Vercel-000000?logo=vercel&logoColor=white)
+![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![Hackathon](https://img.shields.io/badge/Averis%20x%20Monash-Hackathon%202026-blueviolet)
-![Dependencies](https://img.shields.io/badge/Dependencies-stdlib%20only-success)
 
 </div>
 
@@ -29,12 +31,13 @@
 
 ## 📑 Table of Contents
 
-- [Team Members](#-team-members)
 - [Introduction](#-introduction)
 - [Features](#-features)
 - [Problem Faced & Who It Affects](#-problem-faced--who-it-affects)
 - [Technical Architecture](#-technical-architecture)
 - [Implementation Details](#-implementation-details)
+- [Technology Stack](#-technology-stack)
+- [Cloud-Native Architecture & Deployment](#-cloud-native-architecture--deployment)
 - [Challenges Faced](#-challenges-faced)
 - [Future Roadmap](#-future-roadmap)
 - [Quick Start](#-quick-start)
@@ -44,91 +47,28 @@
 
 ## 📌 Introduction
 
-Shipping operations involve handling a large number of emails and documents, including Shipping Instructions (SI), Draft Bills of Lading (BL), invoices, and other supporting documents.
+**Waybill Copilot** is a **cloud-native, AI-powered shipping document verifier** built for the **Averis x Monash Hackathon 2026**. It automates the slow, manual work of reading shipping emails and checking their paperwork.
 
-Manually reviewing these documents can be time-consuming and prone to human error, especially when operators need to identify discrepancies between multiple documents.
+Shipping teams receive a constant stream of emails carrying **Shipping Instructions (SI)**, **Draft Bills of Lading (BL)**, invoices, and supporting documents. Verifying each one by hand — identifying the email's purpose, finding the right attachments, and cross-checking key fields between the SI and the BL — is repetitive and error-prone.
 
-The **Waybill Copilot** was built for the **Averis x Monash Hackathon 2026** to automate this verification process. Rather than only displaying an error on screen, the system acts as an active operational copilot: it reads the shipping inbox, verifies the paperwork, and drafts the reply for every problem it finds.
+Waybill Copilot handles this end to end. It uses **cloud-based AI (the Google Gemini API)** to classify each email and extract the important fields, then compares the SI against the draft BL and flags any discrepancies. When the AI isn't confident or a document can't be processed, the case is sent to a **human-in-the-loop (HITL)** review workspace, where an operator makes the final call with AI assistance. This combination of automation and human oversight keeps verification both fast and reliable.
 
-The system:
-
-1. **Classifies** incoming emails by intent
-2. **Validates** attachment availability and readability
-3. **Extracts** the 7 core shipping fields: Shipper, Consignee, Notify Party, Port of Loading, Port of Discharge, Container Count, and Gross Weight
-4. **Compares** the Shipping Instructions (SI) against the Draft Bill of Lading (BL)
-5. **Flags** two kinds of problems — `MISMATCH` (the AI found the problem itself) and `NEEDS_REVIEW` (the AI can't complete the check, so a human reviews it in the HITL AI Copilot workspace)
-6. **Drafts** a context-specific reply the operator can approve in one click
+Because it's built as a **cloud-native application** — containerized with Docker, deployed to a serverless cloud platform, and backed by a managed cloud database — it's accessible from any browser and ready to scale with real shipping workloads.
 
 ---
 
 ## ✨ Features
 
-### Stage 1: Email Intent Classifier (`classify.py`)
-
-Ingests raw email JSON objects and sorts each one into a category:
-
-| Intent | Description |
-|---|---|
-| `BL_COMPARISON` | Requests to verify a draft Bill of Lading against Shipping Instructions |
-| `SI_REQUEST` | Requests to issue or prepare new Shipping Instructions |
-| `INVOICE_QUERY` | Billing, tax invoice, or payment-related inquiries |
-| `GENERAL` | Standard operational correspondence and updates |
-| `SPAM` | Unsolicited promotional or irrelevant emails |
-
-### Stage 2: Quality & Edge Checks
-
-Validates attachment availability and readability. Clean, complete emails continue to field extraction. Anything the pipeline can't handle on its own is set to `NEEDS_REVIEW` with an explicit reason code:
-
-| Reason Code | Trigger |
-|---|---|
-| `wrong_doc_type` | Attachment is a Commercial Invoice, Packing List, or other non-BL file |
-| `missing_attachment` | Comparison requested, but the draft BL is missing |
-| `unreadable` | File is corrupted, garbled, or empty |
-| `missing_value` | SI contains unpopulated placeholders (`???`, `_______`, `TBA`, `N/A`) |
-
-For clean cases, label variations are normalized (e.g. *Port of Loading* ↔ *POL*) and the 7 fields are compared.
-
-### Stage 3: Field Extraction, Comparison & Category Endpoints (`app.py`, `ai_copilot.py`)
-
-| Final Status | Meaning | Next step |
-|---|---|---|
-| `OK` | Non-BL request, or all 7 fields match | Routed to its category endpoint |
-| `MISMATCH` | The AI detected the problem: one or more fields differ between SI and BL, shown as an exact side-by-side list | Response Generator drafts an amendment request |
-| `NEEDS_REVIEW` | The pipeline can't complete the check on its own (edge case) | HITL Review Queue and AI Copilot |
-
-- **Direct categories:** emails that don't need review are routed to their category endpoint (Spam, SI request, BL request, etc.).
-- **`MISMATCH`:** goes straight to the Response Generator, because the problem is already identified.
-- **`NEEDS_REVIEW`:** goes to the AI Copilot workspace.
-
-### 🤖 HITL AI Copilot
-
-An interactive Streamlit dashboard where operators work through `NEEDS_REVIEW` emails, powered by the **Google Gemini API**.
-
-| Feature | What it does |
-|---|---|
-| **🔍 AI Diagnosis** | Analyzes a flagged email and explains the issue to the operator in plain language |
-| **💡 AI Solution Recommendation** | Suggests the next action and generates a pre-populated reply draft |
-| **✅ Resolve** | The operator categorizes the email; clicking *Resolve* moves it to its designated area |
-| **↩️ Revert** | Undoes a human mistake and restores the email to its review state |
-
-### ✉️ One-Click Email Response Generator (HITL Action Engine)
-
-Instead of only displaying an error, the system gives the operator a ready-to-use reply. The draft depends on the type of flag:
-
-| Flag | Recipient | What the draft contains |
-|---|---|---|
-| `MISMATCH` | Shipping carrier | A pre-populated **amendment request** listing the exact discrepancies (e.g. asking for the draft BL's Consignee to be corrected to match the SI) |
-| `NEEDS_REVIEW` (missing attachment / edge case) | Client | An instant **follow-up** requesting the missing draft BL or required document |
-
-Each draft comes with three action buttons:
-
-| Button | What it does |
-|---|---|
-| 📋 **Copy the email** | Copies the drafted email so it can be pasted anywhere |
-| 📧 **Open email app** | Opens the draft in the operator's email app |
-| ✅ **Approve & Log Reply** | Approves the draft and logs the reply |
-
-The operator always reviews the draft before anything goes out. By generating context-specific replies automatically, the feature reduces the manual handling time needed per email.
+- **📥 Email & document processing** — ingests shipping emails and their attachments (TXT, PDF, DOCX, XLSX).
+- **🏷️ AI document classification** — sorts each email by intent: `BL_COMPARISON`, `SI_REQUEST`, `INVOICE_QUERY`, `GENERAL`, or `SPAM`.
+- **📄 Data extraction** — pulls the 7 core shipping fields (Shipper, Consignee, Notify Party, Port of Loading, Port of Discharge, Container Count, Gross Weight) from documents.
+- **🔍 Document comparison** — compares the SI against the draft BL field by field and detects exact discrepancies.
+- **🤖 AI-assisted verification** — uses the Google Gemini API for classification and extraction, with a deterministic rule-engine fallback for reliability.
+- **🧑‍💻 Human-in-the-loop review** — uncertain cases (`NEEDS_REVIEW`) go to an AI Copilot workspace where operators review, resolve, or revert.
+- **⚠️ Confidence & error identification** — flags `MISMATCH` (found discrepancies) and `NEEDS_REVIEW` (edge cases such as missing, unreadable, or wrong documents) with explicit reason codes.
+- **✉️ One-click response generator** — auto-drafts amendment requests (to carriers) and follow-up requests (to clients) that operators approve and log.
+- **📊 Dashboard / web interface** — a browser dashboard with KPI cards, filters, an SI-vs-BL diff view, and a scorecard.
+- **🔌 Backend / API** — HTTP/JSON endpoints powering the dashboard, HITL copilot, and response engine, served as cloud serverless functions.
 
 ---
 
@@ -136,226 +76,226 @@ The operator always reviews the draft before anything goes out. By generating co
 
 ### The Problem
 
-A typical verification process may require an operator to read an incoming email, determine its purpose, locate the relevant attachments, open and inspect the documents, identify important shipping fields, compare information across documents, identify discrepancies, determine the appropriate action, and write a response to the relevant party. Performing these steps manually creates several operational problems:
+Manually verifying shipping documents means reading every email, working out what it's asking for, opening the attachments, extracting the key fields, comparing them across documents, spotting discrepancies, deciding what to do, and writing a reply. Done at volume, this leads to:
 
-- **Manual verification** — operators need to repeatedly inspect documents and compare information by hand.
-- **Human error** — small differences in fields such as consignee names, ports, container counts, or gross weight can be overlooked.
-- **Missing or unreadable documents** — a verification request may not contain the required Draft BL, or the provided file may be corrupted, empty, or unreadable.
-- **Repetitive communication** — operators may need to repeatedly write similar amendment requests or follow-up emails.
-- **Uncertain cases** — not every document can be safely processed automatically; some cases require human judgement.
+- **Time-consuming verification** — hours lost to repetitive document checks.
+- **Costly errors** — small mismatches in consignee names, ports, container counts, or weights slip through and cause downstream delays.
+- **Problem documents** — missing draft BLs, corrupt or unreadable files, and incomplete forms stall the process.
+- **Repetitive communication** — staff rewrite the same amendment and follow-up emails over and over.
 
-### Who Does It Affect?
+### Who It Affects
 
-| Group | Impact |
-|---|---|
-| **Shipping Operations Teams** | Spend time processing emails, reviewing documents, identifying discrepancies, and communicating with clients or carriers |
-| **Shipping Carriers** | May receive amendment requests when discrepancies are found between the SI and Draft BL |
-| **Clients** | May need to provide missing documents or correct incomplete information before the shipping process can continue |
-| **Operations Managers** | Large volumes of manual processing make it harder to maintain consistent workflows and monitor unresolved cases |
+| Group | Impact | How Waybill Copilot helps |
+|---|---|---|
+| **Logistics / operations teams** | Spend their day processing emails and chasing discrepancies | Automates classification, comparison, and reply drafting |
+| **Shipping / documentation staff** | Must manually compare SI vs BL and request corrections | Gets exact, auto-generated amendment requests |
+| **Reviewers / managers** | Need consistency and visibility over open cases | Gains a HITL review queue, a clear dashboard, and an audit log |
+| **Clients & carriers** | Wait on corrections or must resend documents | Receive fast, specific follow-ups stating exactly what's needed |
+
+By combining **AI-assisted automation** with **human review** in a **cloud-native workflow**, the project removes the repetitive manual work while keeping people in control of the decisions that matter.
 
 ---
 
 ## 🏗️ Technical Architecture
 
-```text
-inbox/ + attachments/  ──►  loader.py  ──►  classify.py (Stages 1–3)  ──►  submission.json
-   (emails & documents)     (loads data)    (classify, check, compare)      (final statuses)
+Waybill Copilot follows a **cloud-native application architecture**: a containerized processing pipeline feeds a serverless cloud backend, which combines cloud AI with human review and serves results to a web dashboard.
+
+```mermaid
+flowchart LR
+    A["📥 Document / Email Input<br/>(inbox + attachments)"] --> B["⚙️ Processing Pipeline<br/>(containerized)"]
+    B --> C["🧠 AI / Cloud Intelligence<br/>(Google Gemini API)"]
+    C --> D{"🔍 Verification<br/>classify · compare"}
+    D -->|clean / mismatch| E["✅ Automated Result"]
+    D -->|uncertain| F["🧑‍💻 Human Review<br/>(HITL AI Copilot)"]
+    F --> G[("🗄️ Cloud Database<br/>Supabase")]
+    E --> H["📊 Dashboard / API<br/>(cloud serverless)"]
+    G --> H
 ```
 
-`loader.py` reads the email records from `inbox/` and their documents from `attachments/`. `classify.py` then runs all three stages on each email and writes the final status of every email to `submission.json`, following the schema in `sample_submission.json`. `classify.py` loads your `.env` automatically on startup.
+The same pipeline runs in two forms: locally/in a container to compute results, and as **cloud serverless functions** that serve those results to the browser with live human-review data from the cloud database.
+
+### Processing pipeline
 
 ```mermaid
 flowchart TD
-    A[📧 Inbox<br/>JSON emails] --> B{Stage 1<br/>Intent Classifier}
+    A[📧 Inbox emails] --> B{Stage 1<br/>Intent Classifier}
     B -->|SPAM / GENERAL /<br/>SI_REQUEST / INVOICE_QUERY| E1[📂 Category endpoint<br/>status: OK]
     B -->|BL_COMPARISON| C{Stage 2<br/>Quality & Edge Checks}
-    C -->|Clean & complete| D[Field Extraction<br/>& SI vs BL Comparison]
+    C -->|Clean & complete| D[Stage 3<br/>Field Extraction &<br/>SI vs BL Comparison]
     D -->|100% match| OK[✅ status: OK]
-    D -->|AI detects differences| MM[❌ status: MISMATCH]
-    C -->|wrong_doc_type<br/>missing_attachment<br/>unreadable<br/>missing_value| NR[⚠️ status: NEEDS_REVIEW]
+    D -->|differences found| MM[❌ status: MISMATCH]
+    C -->|wrong_doc_type · missing_attachment<br/>unreadable · missing_value| NR[⚠️ status: NEEDS_REVIEW]
     NR --> Q[🧑‍💻 HITL Review Queue]
-    Q --> H[🤖 AI Copilot Workspace<br/>Streamlit + Gemini]
+    Q --> H[🤖 AI Copilot · Gemini]
     H -->|Resolve| R[📂 Designated category]
     R -.->|Revert| Q
-    MM --> G[✉️ One-Click Response Generator<br/>drafts reply]
+    MM --> G[✉️ Response Generator]
     H --> G
-    G --> BTN[Copy · Open email app ·<br/>Approve & Log Reply]
-```
-
-### AI Copilot Workflow
-
-```text
-NEEDS_REVIEW
-      │
-      ▼
-AI Diagnosis
-      │
-      ▼
-Solution Recommendation
-      │
-      ▼
-Operator Review
-      │
- ┌────┴────┐
- ▼         ▼
-Resolve   Revert
- │         │
- ▼         └──► Review Queue
-Category
-```
-
-The AI assists the operator, but the final action remains under human control.
-
-### Response Generation
-
-```text
-MISMATCH
-   │
-   ▼
-Amendment Request
-   │
-   ▼
-Shipping Carrier
-
-NEEDS_REVIEW
-   │
-   ▼
-Follow-up Request
-   │
-   ▼
-Client
+    G --> BTN[Copy · Open mail app ·<br/>Approve & Log Reply]
 ```
 
 ---
 
 ## 🛠️ Implementation Details
 
-### Project Structure
+The repository is the source of truth. Here's how the main pieces fit together.
+
+### Project structure
 
 ```text
 sdoc-shipping-document-verifier/
-├── attachments/            # Document attachments (PDF, DOCX, XLSX, TXT)
-├── inbox/                  # Inbound email records (JSON)
-├── .gitignore              # Keeps secrets such as .env out of Git
-├── classify.py             # Stage 1 classifier & Stage 2/3 extraction engine
-├── loader.py               # Inbox data loader helper
-├── sample_submission.json  # Submission schema specification
-├── submission.json         # Generated evaluation output
-└── README.md               # Project documentation
+├── inbox/                    # Inbound email records (JSON)
+├── attachments/              # Document attachments (TXT, PDF, DOCX, XLSX)
+├── api/                      # Cloud serverless functions (dashboard + JSON API)
+│   ├── _lib/sdoc.py          # Snapshot-backed app + HTTP helpers
+│   ├── _snapshot/            # Precomputed pipeline output (committed)
+│   └── *.py                  # One function per route
+├── scripts/
+│   └── build_snapshot.py     # Builds api/_snapshot/snapshot.json
+├── tests/                    # Test fixtures + runner
+├── loader.py                 # Inbox data loader (local files or HTTP)
+├── classify.py               # Hybrid AI + rule intent classifier & field extractor
+├── comparator.py             # SI↔BL comparison & status logic
+├── extractor.py              # 7-field extraction, label aliases, normalization
+├── formats.py                # Attachment readers (txt/pdf/docx/xlsx) → text
+├── scoring.py                # Hackathon scoring module
+├── hitl.py                   # Gemini HITL copilot + Supabase/local store
+├── actions.py                # Response generator + approved-reply log
+├── webui.py                  # Web dashboard (dependency-free http.server)
+├── main.py                   # CLI: generate / evaluate / run
+├── Dockerfile                # Container build (port 8081)
+├── vercel.json               # Serverless routes + function config
+└── requirements.txt          # Build-time parsing deps (pypdf, python-docx, openpyxl)
 ```
 
-### Core Components
+### How it works
 
-- **`loader.py`** — reads email records from `inbox/` and their associated documents from `attachments/`.
-- **`classify.py`** — the main processing engine: handles email classification, document validation, field extraction, SI vs. Draft BL comparison, and final status generation. Writes `submission.json` according to the schema in `sample_submission.json`.
-- **`app.py`** — provides the Streamlit dashboard used by operators to interact with the system.
-- **`ai_copilot.py`** — provides the AI-powered Human-in-the-Loop workspace using the Google Gemini API, assisting operators with cases marked `NEEDS_REVIEW`.
+- **Document processing pipeline** — `loader.py` reads emails and attachments; `formats.py` converts each attachment to plain text (returning `unreadable` for corrupt/empty/image-only files).
+- **Classification** — `classify.py` classifies intent using the **Gemini API** first, falling back to a deterministic rule engine so local runs stay fast and reproducible.
+- **Data extraction** — `extractor.py` maps the 7 fields to their many label aliases (e.g. *Port of Loading* / *POL* / *Load Port*), drops placeholder values, and normalizes values for comparison.
+- **Comparison & verification** — `comparator.py` detects the document kind, escalates edge cases to `NEEDS_REVIEW` with a reason code, and compares SI vs BL field by field to produce `OK` or `MISMATCH` plus the exact `defect_fields`.
+- **AI integration** — `hitl.py` calls the **Google Gemini API** directly over REST (with retry/backoff) to generate a diagnosis, suggested fix, and follow-up answers for `NEEDS_REVIEW` cases.
+- **HITL workflow & database** — human resolutions are stored in **Supabase** (the `hitl_reviews` table, with a local JSON fallback) and applied as overrides on top of the base pipeline output; reverting deletes the override.
+- **Response generation** — `actions.py` builds deterministic amendment/follow-up drafts from pipeline facts and logs approved replies (Supabase `hitl_actions` or local file).
+- **Backend / API** — `webui.py` serves the dashboard and JSON endpoints locally or in Docker; `api/*.py` exposes the same functionality as cloud serverless functions.
+- **UI** — `webui.py` renders a dependency-free dashboard with switchable modern/classic themes, the HITL AI card, and the response-engine card.
 
-### 💻 Technology Stack
+---
 
-| Category | Details |
-|---|---|
-| **Language** | Python 3.11 / 3.12+ |
-| **Document Processing** | pypdf (PDF), python-docx (DOCX), openpyxl (XLSX) |
-| **AI / LLM** | Google Gemini API (`hitl.py`) |
-| **Dashboard** | Streamlit (`webui.py`) |
-| **Deployment** | Docker (Dockerfile, Python 3.11-slim) + Vercel serverless (`api/`, stdlib-only prebuilt snapshot) |
-| **Data Storage** | Supabase (`hitl_reviews` table), with local JSON fallback (`hitl_overrides.json`) |
- 
+## 💻 Technology Stack
+
+| Category | Technology | Purpose |
+|---|---|---|
+| **Application** | Python 3.12+ | Core application & pipeline |
+| **AI** | Google Gemini API | AI-powered classification, extraction & HITL analysis |
+| **Backend** | Python `http.server` + serverless functions (`api/`) | Application services & JSON API |
+| **Frontend** | Dependency-free Web UI (`webui.py`) | User interaction & dashboard |
+| **Database** | Supabase (hosted Postgres) | HITL / review & action-log data |
+| **Document Processing** | pypdf · python-docx · openpyxl | PDF / DOCX / XLSX text extraction |
+| **Containerization** | Docker | Application packaging |
+| **Cloud** | Vercel (serverless) + cloud AI/database | Cloud-native application infrastructure |
+
+---
+
+## ☁️ Cloud-Native Architecture & Deployment
+
+Waybill Copilot is built as a **cloud-native application**, using cloud services for AI, data, and hosting:
+
+- **☁️ Cloud-based AI** — document analysis runs on the **Google Gemini API**, consumed as a managed cloud service.
+- **📦 Containerized components** — the application is packaged as a **Docker** container, so it runs consistently anywhere.
+- **🔌 Stateless / API-based design** — the serving layer is stateless; mutable review data lives in an external cloud database, letting the app scale and redeploy freely.
+- **🌐 Web-based accessibility** — the dashboard is reachable from any browser, no install required.
+- **🚀 Cloud deployment** — the app is deployed as **serverless cloud functions (Vercel)** that serve a precomputed snapshot, keeping responses fast.
+- **🗄️ Managed cloud database** — **Supabase** stores HITL resolutions and approved replies, so state is durable and shared.
+- **📈 Scalable architecture** — because the serving tier is stateless and containerized, it scales horizontally as inbox volume grows.
+
+Together these give the project a practical cloud-native foundation without unnecessary operational complexity.
+
 ---
 
 ## 🚧 Challenges Faced
 
-### 1. Handling Different Document Conditions
-
-Real-world documents don't always follow the expected format, so the system has to account for missing attachments, incorrect document types, unreadable or empty files, missing values, and different field-naming conventions.
-
-### 2. Balancing Automation and Human Oversight
-
-Fully automating document verification can be risky when the system cannot confidently determine the correct result. Uncertain cases are classified as `NEEDS_REVIEW` and sent to the HITL AI Copilot, allowing automation for straightforward cases while keeping an operator involved when human judgement is required.
-
-### 3. Extracting Consistent Information
-
-The same shipping field can appear under different names — for example, *Port of Loading*, *POL*, and *Loading Port* — so the system normalizes these variations before performing comparisons.
-
-### 4. Generating Useful Responses
-
-Simply identifying a mismatch isn't enough for an operational workflow; the system also needs to produce a response that clearly explains what needs to be corrected or what document needs to be provided.
-
-### 5. Integrating AI into an Operational Workflow
-
-The AI component needs to support the operator rather than replace them. The system separates AI detection → AI recommendation → human review → final action, providing a controlled workflow for cases where automated verification is uncertain.
+- **Processing different document formats** — reliably reading TXT, PDF, DOCX, and XLSX attachments, and detecting corrupt, empty, or image-only files.
+- **Extracting reliable information** — handling the same field across many label variations and normalizing values before comparison.
+- **AI classification & verification** — getting consistent, accurate results from the LLM and pairing it with a rule-engine fallback for reliability.
+- **Handling uncertain AI results** — escalating ambiguous cases to `NEEDS_REVIEW` instead of guessing.
+- **Human-in-the-loop integration** — letting operators resolve and revert reviews while keeping base pipeline output intact.
+- **API / cloud service integration** — calling the Gemini API and Supabase over REST with retries and graceful fallbacks.
+- **Deployment & reliability** — serving the app from a stateless, read-only serverless environment by precomputing a snapshot and externalizing state.
 
 ---
 
 ## 🗺️ Future Roadmap
 
-The current implementation provides the core document verification and HITL workflow. Future development could expand the system in several areas:
+The following are **planned future improvements**, not yet implemented:
 
-- **🔹 Email System Integration** — connect directly to an email platform so incoming emails are processed automatically rather than relying on local inbox data.
-- **🔹 Broader Document Support** — expand processing to support additional shipping documents and formats, such as Commercial Invoices, Packing Lists, Arrival Notices, and other shipping-related documentation.
-- **🔹 Advanced OCR** — improve extraction from scanned or image-based documents using more advanced OCR capabilities.
-- **🔹 Improved AI Verification** — enhance the AI verification layer to handle more complex document structures and inconsistencies.
-- **🔹 Audit & Analytics** — introduce operational analytics to track processed emails, mismatches, human reviews, common document errors, and response processing time.
-- **🔹 Production Deployment** — move from a local Docker-based deployment toward a production environment with authentication, role-based access, centralized logging, monitoring, secure API management, and scalable infrastructure.
+- **🔹 Improved AI accuracy** — better extraction and classification on complex document layouts.
+- **🔹 More document formats** — Commercial Invoices, Packing Lists, Arrival Notices, and scanned/OCR documents.
+- **🔹 More automated verification** — expand the checks the pipeline can complete on its own.
+- **🔹 Enhanced cloud scalability** — event-driven ingestion and autoscaling on a managed container platform.
+- **🔹 Better monitoring & logging** — operational metrics and centralized observability.
+- **🔹 Improved authentication & security** — role-based access and secure API management.
+- **🔹 More advanced analytics** — track mismatches, reviews, common errors, and processing time.
+- **🔹 Logistics / shipping system integration** — connect directly to email and shipping platforms.
 
 ---
 
 ## ⚡ Quick Start
+
 ### 🔗 Try the live product
- 
-The dashboard is deployed on Vercel — no setup needed, just open it:
- 
+
+The dashboard is deployed as a **cloud serverless app** — no setup needed:
+
 **👉 https://your-project-name.vercel.app**
- 
-The Next.js frontend calls the Python verification logic through API routes, so the inbox, HITL Copilot, and Response Generator all work directly in the browser.
- 
-### 🛠️ Run it locally (optional, for development)
- 
-If you'd rather run the project on your own machine:
- 
+
+### 🛠️ Run it locally
+
 **Prerequisites**
 - Python **3.12+**
-- Docker and Docker Compose
+- Docker (optional)
 - A [Google Gemini API key](https://aistudio.google.com/apikey)
 
-### 1. Clone the repository
+**1. Clone the repository**
 
 ```bash
 git clone https://github.com/nishtwowhoo/sdoc-shipping-document-verifier.git
 cd sdoc-shipping-document-verifier
 ```
 
-### 2. Configure your environment
+**2. Configure your environment**
 
 Create a `.env` file in the project root:
 
 ```env
 GEMINI_API_KEY=your_api_key_here
+# Optional cloud database (falls back to local JSON when unset):
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_anon_or_service_key
 ```
 
-> ⚠️ Never commit `.env` to GitHub. Make sure it is listed in `.gitignore`.
+> ⚠️ Never commit `.env`. It is already listed in `.gitignore`.
 
-### 3. Generate predictions (optional)
-
-Run the classification & verification pipeline on its own. Output is written to `submission.json`, following the schema in `sample_submission.json`.
+**3. Generate predictions (optional)**
 
 ```bash
+python main.py generate --data-dir . --out submission.json
+# or
 python classify.py
 ```
 
-### 4. Launch the dashboard locally
+**4. Launch the dashboard**
 
 ```bash
-docker compose up --build
-```
+# Directly
+python webui.py                 # http://127.0.0.1:8081
 
-Then open **http://localhost:8080** in your browser.
+# Or in Docker (cloud-native container)
+docker build -t waybill-copilot .
+docker run -p 8081:8081 -e GEMINI_API_KEY=your_key waybill-copilot
+```
 
 ---
 
 ## 📄 License
 
 This project was developed for the **Averis x Monash Hackathon 2026**.
-
-Slide Deck: https://canva.link/i01a79dcvw0u49t
