@@ -9,7 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 ![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)
 ![Docker](https://img.shields.io/badge/Containerized-Docker-2496ED?logo=docker&logoColor=white)
-![Vercel](https://img.shields.io/badge/Cloud-Vercel-000000?logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Cloud-Render-46E3B7?logo=render&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![Hackathon](https://img.shields.io/badge/Averis%20x%20Monash-Hackathon%202026-blueviolet)
 
@@ -53,7 +53,7 @@ Shipping teams receive a constant stream of emails carrying **Shipping Instructi
 
 Waybill Copilot handles this end to end. It uses **cloud-based AI (the Google Gemini API)** to classify each email and extract the important fields, then compares the SI against the draft BL and flags any discrepancies. When the AI isn't confident or a document can't be processed, the case is sent to a **human-in-the-loop (HITL)** review workspace, where an operator makes the final call with AI assistance. This combination of automation and human oversight keeps verification both fast and reliable.
 
-Because it's built as a **cloud-native application** — containerized with Docker, deployed to a serverless cloud platform, and backed by a managed cloud database — it's accessible from any browser and ready to scale with real shipping workloads.
+Because it's built as a **cloud-native application** — containerized with Docker, deployed as a cloud web service on **Render**, and backed by a managed cloud database — it's accessible from any browser and ready to scale with real shipping workloads.
 
 ---
 
@@ -68,7 +68,7 @@ Because it's built as a **cloud-native application** — containerized with Dock
 - **⚠️ Confidence & error identification** — flags `MISMATCH` (found discrepancies) and `NEEDS_REVIEW` (edge cases such as missing, unreadable, or wrong documents) with explicit reason codes.
 - **✉️ One-click response generator** — auto-drafts amendment requests (to carriers) and follow-up requests (to clients) that operators approve and log.
 - **📊 Dashboard / web interface** — a browser dashboard with KPI cards, filters, an SI-vs-BL diff view, and a scorecard.
-- **🔌 Backend / API** — HTTP/JSON endpoints powering the dashboard, HITL copilot, and response engine, served as cloud serverless functions.
+- **🔌 Backend / API** — HTTP/JSON endpoints powering the dashboard, HITL copilot, and response engine.
 
 ---
 
@@ -98,7 +98,7 @@ By combining **AI-assisted automation** with **human review** in a **cloud-nativ
 
 ## 🏗️ Technical Architecture
 
-Waybill Copilot follows a **cloud-native application architecture**: a containerized processing pipeline feeds a serverless cloud backend, which combines cloud AI with human review and serves results to a web dashboard.
+Waybill Copilot follows a **cloud-native application architecture**: a containerized processing pipeline combines cloud AI with human review and serves results to a web dashboard.
 
 ```mermaid
 flowchart LR
@@ -108,11 +108,11 @@ flowchart LR
     D -->|clean / mismatch| E["✅ Automated Result"]
     D -->|uncertain| F["🧑‍💻 Human Review<br/>(HITL AI Copilot)"]
     F --> G[("🗄️ Cloud Database<br/>Supabase")]
-    E --> H["📊 Dashboard / API<br/>(cloud serverless)"]
+    E --> H["📊 Dashboard / API<br/>(cloud web service)"]
     G --> H
 ```
 
-The same pipeline runs in two forms: locally/in a container to compute results, and as **cloud serverless functions** that serve those results to the browser with live human-review data from the cloud database.
+The application runs as a **containerized cloud web service on Render**: the pipeline builds in memory at startup, and the same process serves the dashboard and JSON API with live human-review data from the cloud database.
 
 ### Processing pipeline
 
@@ -146,7 +146,7 @@ The repository is the source of truth. Here's how the main pieces fit together.
 sdoc-shipping-document-verifier/
 ├── inbox/                    # Inbound email records (JSON)
 ├── attachments/              # Document attachments (TXT, PDF, DOCX, XLSX)
-├── api/                      # Cloud serverless functions (dashboard + JSON API)
+├── api/                      # Optional serverless functions (alt. deployment)
 │   ├── _lib/sdoc.py          # Snapshot-backed app + HTTP helpers
 │   ├── _snapshot/            # Precomputed pipeline output (committed)
 │   └── *.py                  # One function per route
@@ -163,8 +163,8 @@ sdoc-shipping-document-verifier/
 ├── actions.py                # Response generator + approved-reply log
 ├── webui.py                  # Web dashboard (dependency-free http.server)
 ├── main.py                   # CLI: generate / evaluate / run
-├── Dockerfile                # Container build (port 8081)
-├── vercel.json               # Serverless routes + function config
+├── Dockerfile                # Container build (used by Render)
+├── render.yaml               # Render deployment blueprint
 └── requirements.txt          # Build-time parsing deps (pypdf, python-docx, openpyxl)
 ```
 
@@ -177,8 +177,7 @@ sdoc-shipping-document-verifier/
 - **AI integration** — `hitl.py` calls the **Google Gemini API** directly over REST (with retry/backoff) to generate a diagnosis, suggested fix, and follow-up answers for `NEEDS_REVIEW` cases.
 - **HITL workflow & database** — human resolutions are stored in **Supabase** (the `hitl_reviews` table, with a local JSON fallback) and applied as overrides on top of the base pipeline output; reverting deletes the override.
 - **Response generation** — `actions.py` builds deterministic amendment/follow-up drafts from pipeline facts and logs approved replies (Supabase `hitl_actions` or local file).
-- **Backend / API** — `webui.py` serves the dashboard and JSON endpoints locally or in Docker; `api/*.py` exposes the same functionality as cloud serverless functions.
-- **UI** — `webui.py` renders a dependency-free dashboard with switchable modern/classic themes, the HITL AI card, and the response-engine card.
+- **Backend / API & UI** — `webui.py` serves the dependency-free dashboard and JSON endpoints (switchable modern/classic themes), running as the main cloud web service on Render.
 
 ---
 
@@ -188,12 +187,12 @@ sdoc-shipping-document-verifier/
 |---|---|---|
 | **Application** | Python 3.12+ | Core application & pipeline |
 | **AI** | Google Gemini API | AI-powered classification, extraction & HITL analysis |
-| **Backend** | Python `http.server` + serverless functions (`api/`) | Application services & JSON API |
+| **Backend** | Python `http.server` web service (`webui.py`) | Application services & JSON API |
 | **Frontend** | Dependency-free Web UI (`webui.py`) | User interaction & dashboard |
 | **Database** | Supabase (hosted Postgres) | HITL / review & action-log data |
 | **Document Processing** | pypdf · python-docx · openpyxl | PDF / DOCX / XLSX text extraction |
 | **Containerization** | Docker | Application packaging |
-| **Cloud** | Vercel (serverless) + cloud AI/database | Cloud-native application infrastructure |
+| **Cloud** | Render (container web service) + cloud AI/database | Cloud-native application infrastructure |
 
 ---
 
@@ -205,9 +204,11 @@ Waybill Copilot is built as a **cloud-native application**, using cloud services
 - **📦 Containerized components** — the application is packaged as a **Docker** container, so it runs consistently anywhere.
 - **🔌 Stateless / API-based design** — the serving layer is stateless; mutable review data lives in an external cloud database, letting the app scale and redeploy freely.
 - **🌐 Web-based accessibility** — the dashboard is reachable from any browser, no install required.
-- **🚀 Cloud deployment** — the app is deployed as **serverless cloud functions (Vercel)** that serve a precomputed snapshot, keeping responses fast.
+- **🚀 Cloud deployment** — the app is deployed as a **Docker container on Render**, which runs the live pipeline in memory and serves the dashboard and API directly (no serverless snapshot needed).
 - **🗄️ Managed cloud database** — **Supabase** stores HITL resolutions and approved replies, so state is durable and shared.
 - **📈 Scalable architecture** — because the serving tier is stateless and containerized, it scales horizontally as inbox volume grows.
+
+> The repository also includes an optional serverless variant (`api/`, `vercel.json`) that serves a precomputed snapshot on Vercel. **Render is the primary deployment target**; the Vercel path remains as an alternative.
 
 Together these give the project a practical cloud-native foundation without unnecessary operational complexity.
 
@@ -221,7 +222,7 @@ Together these give the project a practical cloud-native foundation without unne
 - **Handling uncertain AI results** — escalating ambiguous cases to `NEEDS_REVIEW` instead of guessing.
 - **Human-in-the-loop integration** — letting operators resolve and revert reviews while keeping base pipeline output intact.
 - **API / cloud service integration** — calling the Gemini API and Supabase over REST with retries and graceful fallbacks.
-- **Deployment & reliability** — serving the app from a stateless, read-only serverless environment by precomputing a snapshot and externalizing state.
+- **Deployment & reliability** — running as a stateless cloud service with durable review data kept in an external managed database.
 
 ---
 
@@ -244,9 +245,9 @@ The following are **planned future improvements**, not yet implemented:
 
 ### 🔗 Try the live product
 
-The dashboard is deployed as a **cloud serverless app** — no setup needed:
+The dashboard is deployed as a **cloud-native container on Render** — no setup needed:
 
-**👉 https://your-project-name.vercel.app**
+**👉 https://sdoc-verifier-j3cc.onrender.com/**
 
 ### 🛠️ Run it locally
 
@@ -289,10 +290,17 @@ python classify.py
 # Directly
 python webui.py                 # http://127.0.0.1:8081
 
-# Or in Docker (cloud-native container)
+# Or in Docker (the same container Render deploys)
 docker build -t waybill-copilot .
 docker run -p 8081:8081 -e GEMINI_API_KEY=your_key waybill-copilot
 ```
+
+### ☁️ Deploy to Render
+
+1. Push the repository to GitHub.
+2. In Render, create a **New Web Service** from the repo (it detects the `Dockerfile` / `render.yaml`).
+3. Add the environment variables (`GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`) in the Render dashboard.
+4. Deploy — Render builds the container and serves the app on your `onrender.com` URL.
 
 ---
 
