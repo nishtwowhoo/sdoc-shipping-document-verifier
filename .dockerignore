@@ -3,3 +3,7 @@ hitl_overrides.json
 __pycache__/
 *.pyc
 .git/
+# Judge's answer key + local-only artifacts (never bake into images)
+ground_truth.json
+*.bak
+session-*.md

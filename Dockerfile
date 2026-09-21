@@ -8,4 +8,5 @@ ENV GEMINI_MODEL=gemini-3-flash-preview \
     SUPABASE_TABLE=hitl_reviews \
     HITL_LOCAL_FILE=hitl_overrides.json
 EXPOSE 8081
-CMD ["python", "webui.py", "--host", "0.0.0.0", "--port", "8081", "--data-dir", "."]
+# Render (and most PaaS) inject $PORT — honor it, defaulting to 8081 locally.
+CMD ["sh", "-c", "python webui.py --host 0.0.0.0 --port ${PORT:-8081} --data-dir ."]
