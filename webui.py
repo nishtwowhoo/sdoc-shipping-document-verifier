@@ -35,6 +35,7 @@ from classify import CATEGORIES, classify
 from comparator import REVIEW_REASONS, analyze_email, _parse_doc
 from extractor import FIELDS, is_placeholder
 from loader import Inbox
+import hitl
 
 STATUSES = ("OK", "MISMATCH", "NEEDS_REVIEW")
 
@@ -237,6 +238,8 @@ class App:
     def __init__(self, data_dir: str, gt: str):
         self.data_dir = data_dir
         self.inbox, self.rows, self.details = _build(data_dir)
+        self.store = hitl.Store(data_dir)
+        self._apply_overrides()
         for r in self.rows:
             r["ui"] = _ui_metrics(r, self.details[r["email_id"]])
         self.sub = {
@@ -247,6 +250,113 @@ class App:
             for r in self.rows
         }
         self.score = _score_report(self.sub, gt)
+
+    def _apply_overrides(self) -> None:
+        try:
+            overrides = self.store.all()
+        except Exception:
+            overrides = {}
+        self.overrides = overrides or {}
+        for r in self.rows:
+            ov = self.overrides.get(r["email_id"])
+            if not ov:
+                continue
+            if ov.get("resolved_category"):
+                r["category"] = ov["resolved_category"]
+            if ov.get("resolved_status"):
+                r["status"] = ov["resolved_status"]
+                if ov["resolved_status"] != "NEEDS_REVIEW":
+                    r["review_reason"] = None
+
+    def resolve(self, email_id: str, payload: dict) -> dict:
+        row = next(r for r in self.rows if r["email_id"] == email_id)
+        extra = self.details[email_id]
+        ai = payload.get("ai") or {}
+        record = {
+            "email_id": email_id,
+            "orig_category": payload.get("orig_category", row["category"]),
+            "orig_status": "NEEDS_REVIEW",
+            "review_reason": row.get("review_reason"),
+            "resolved_category": payload.get("resolved_category", row["category"]),
+            "resolved_status": payload.get("resolved_status", "OK"),
+            "ai_explanation": ai.get("explanation", ""),
+            "ai_fix": ai.get("suggested_fix", ""),
+            "resolved_by": payload.get("resolved_by", "human"),
+            "note": payload.get("note", ""),
+        }
+        saved = self.store.save(record)
+        row["category"] = record["resolved_category"]
+        row["status"] = record["resolved_status"]
+        if row["status"] != "NEEDS_REVIEW":
+            row["review_reason"] = None
+        row["ui"] = _ui_metrics(row, extra)
+        self.overrides[email_id] = record
+        self.sub[email_id] = {
+            k: row[k]
+            for k in ("category", "status", "review_reason", "defect_fields", "has_defect")
+        }
+        return saved
+
+    def _refresh_row(self, email_id: str) -> None:
+        """Recompute one row from the pipeline, re-applying any override."""
+        _, fresh_rows, fresh_details = _build(self.data_dir)
+        fresh = next(r for r in fresh_rows if r["email_id"] == email_id)
+        self.details[email_id] = fresh_details[email_id]
+        ov = self.overrides.get(email_id)
+        if ov:
+            if ov.get("resolved_category"):
+                fresh["category"] = ov["resolved_category"]
+            if ov.get("resolved_status"):
+                fresh["status"] = ov["resolved_status"]
+                if ov["resolved_status"] != "NEEDS_REVIEW":
+                    fresh["review_reason"] = None
+        fresh["ui"] = _ui_metrics(fresh, self.details[email_id])
+        for i, r in enumerate(self.rows):
+            if r["email_id"] == email_id:
+                self.rows[i] = fresh
+                break
+        self.sub[email_id] = {
+            k: fresh[k]
+            for k in ("category", "status", "review_reason", "defect_fields", "has_defect")
+        }
+
+    def revert(self, email_id: str) -> dict:
+        """Delete a HITL override; email returns to pipeline NEEDS_REVIEW."""
+        saved = self.store.delete(email_id)
+        self.overrides.pop(email_id, None)
+        self._refresh_row(email_id)
+        return saved
+
+    def reset_all(self) -> dict:
+        saved = self.store.clear()
+        self.overrides = {}
+        _, fresh_rows, fresh_details = _build(self.data_dir)
+        self.rows = fresh_rows
+        self.details = fresh_details
+        for r in self.rows:
+            r["ui"] = _ui_metrics(r, self.details[r["email_id"]])
+        self.sub = {
+            r["email_id"]: {
+                k: r[k]
+                for k in ("category", "status", "review_reason", "defect_fields", "has_defect")
+            }
+            for r in self.rows
+        }
+        return saved
+
+    def explain(self, email_id: str) -> dict:
+        row = next(r for r in self.rows if r["email_id"] == email_id)
+        extra = self.details[email_id]
+        email = {
+            "email_id": email_id,
+            "subject": row.get("subject", ""),
+            "from": row.get("from", ""),
+            "body": extra.get("body", ""),
+        }
+        out = hitl.gemini_explain(email, extra.get("docs", []), row.get("review_reason"))
+        out["backend"] = self.store.backend
+        out["review_reason"] = row.get("review_reason")
+        return out
 
     def filtered(self, q) -> list:
         cat = (q.get("cat") or [""])[0]
@@ -285,6 +395,108 @@ class App:
             "mismatch": sum(1 for r in self.rows if r["status"] == "MISMATCH"),
             "review": sum(1 for r in self.rows if r["status"] == "NEEDS_REVIEW"),
         }
+
+
+# ---------------------------------------------------------------------------
+# HITL AI agent card (NEEDS_REVIEW only, email detail page)
+# ---------------------------------------------------------------------------
+
+
+def _hitl_card(eid: str, review_reason: str | None) -> str:
+    cats = "".join(f'<option value="{c}">{c}</option>' for c in CATEGORIES)
+    stats = "".join(f'<option value="{s}">{s}</option>' for s in STATUSES)
+    return f"""
+<div class="card" id="hitl-card">
+<h3>AI agent · human-in-the-loop</h3>
+<div class="cell-mut">Reason: <b>{_esc(review_reason or "—")}</b> · Ask what is wrong with this email.</div>
+<div id="hitl-out" style="margin-top:10px"><div class="cell-mut">Loading AI explanation…</div></div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<input id="hitl-q" placeholder="Ask a follow-up, e.g. what file is missing?" style="flex:1;min-width:220px;height:37px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
+<button class="btn outline" id="hitl-ask">Ask AI</button>
+</div>
+<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+<h3>Resolve review</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<select class="field" id="hitl-cat">{cats}</select>
+<select class="field" id="hitl-status">{stats}</select>
+<input id="hitl-note" placeholder="Reviewer note (optional)" style="flex:1;min-width:180px;height:39px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
+<button class="btn outline" id="hitl-resolve">Resolve</button>
+</div>
+<div class="cell-mut" id="hitl-msg" style="margin-top:8px"></div>
+<div class="cell-mut" style="margin-top:4px">Saved to Supabase table <b>hitl_reviews</b> when configured, else <b>hitl_overrides.json</b>. Resolving moves it out of NEEDS_REVIEW.</div>
+</div>
+</div>
+<script>
+(function(){{
+const eid={json.dumps(eid)};
+let lastAI=null;
+const out=document.getElementById('hitl-out');
+const msg=document.getElementById('hitl-msg');
+const esc=s=>(s+'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
+async function explain(question){{
+  out.innerHTML='<div class="cell-mut">Thinking…</div>';
+  const url='/api/hitl/explain/'+encodeURIComponent(eid)+(question?'?q='+encodeURIComponent(question):'');
+  const r=await fetch(url); const j=await r.json();
+  lastAI=j;
+  document.getElementById('hitl-cat').value=j.suggested_category||'GENERAL';
+  document.getElementById('hitl-status').value=j.suggested_status||'OK';
+  out.innerHTML='<div class="keyval"><b>What is wrong</b></div><div style="margin:4px 0 10px">'+esc(j.explanation||'—')+'</div>'
+    +'<div class="keyval"><b>Suggested fix</b></div><div style="margin:4px 0">'+esc(j.suggested_fix||'—')+'</div>'
+    +'<div class="cell-mut" style="margin-top:6px">source: '+esc(j.source||'?')+' · backend: '+esc(j.backend||'?')+' · reason: '+esc(j.review_reason||'—')+'</div>';
+}}
+document.getElementById('hitl-ask').addEventListener('click',()=>explain(document.getElementById('hitl-q').value));
+document.getElementById('hitl-resolve').addEventListener('click',async ()=>{{
+  msg.textContent='Saving…';
+  const r=await fetch('/api/review',{{
+    method:'POST',headers:{{'Content-Type':'application/json'}},
+    body:JSON.stringify({{email_id:eid,
+      resolved_category:document.getElementById('hitl-cat').value,
+      resolved_status:document.getElementById('hitl-status').value,
+      note:document.getElementById('hitl-note').value,ai:lastAI||{{}}}})}});
+  const j=await r.json();
+  msg.textContent='Saved via '+j.backend+'. Reloading…';
+  setTimeout(()=>location.reload(),700);
+}});
+explain('');
+}})();
+</script>"""
+
+
+def _resolved_banner(eid: str, record: dict, total_resolved: int) -> str:
+    return f"""
+<div class="card" id="resolved-banner" style="border-color:var(--warn, #E8971B)">
+<h3>Human-resolved review</h3>
+<div class="cell-mut">Was <b>NEEDS_REVIEW</b> ({_esc(record.get("review_reason") or "—")}) · now
+<b>{_esc(record.get("resolved_category"))} / {_esc(record.get("resolved_status"))}</b>
+by {_esc(record.get("resolved_by") or "human")}. Wrong flag? Revert it below.</div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<button class="btn outline" id="hitl-undo">Undo this review</button>
+<button class="btn ghost" id="hitl-reset-all">Reset all {total_resolved} review(s)</button>
+</div>
+<div class="cell-mut" id="hitl-revert-msg" style="margin-top:8px"></div>
+</div>
+<script>
+(function(){{
+const eid={json.dumps(eid)};
+const msg=document.getElementById('hitl-revert-msg');
+document.getElementById('hitl-undo').addEventListener('click',async ()=>{{
+  if(!confirm('Revert '+eid+' back to NEEDS_REVIEW?'))return;
+  msg.textContent='Reverting…';
+  const r=await fetch('/api/revert',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{email_id:eid}})}});
+  const j=await r.json();
+  msg.textContent='Reverted via '+j.backend+'. Reloading…';
+  setTimeout(()=>location.reload(),700);
+}});
+document.getElementById('hitl-reset-all').addEventListener('click',async ()=>{{
+  if(!confirm('Reset ALL human reviews back to NEEDS_REVIEW?'))return;
+  msg.textContent='Resetting…';
+  const r=await fetch('/api/revert-all',{{method:'POST'}});
+  const j=await r.json();
+  msg.textContent='Reset via '+j.backend+'. Reloading…';
+  setTimeout(()=>location.reload(),900);
+}});
+}})();
+</script>"""
 
 
 # ---------------------------------------------------------------------------
@@ -696,7 +908,9 @@ document.addEventListener('DOMContentLoaded',()=>{
             f'<h3>Subject</h3><div class="keyval">{_esc(d["subject"])} {chips}</div>'
             f'<details style="margin-top:8px"><summary>Body</summary><div class="fmt">{_esc(d["body"])}</div></details>'
             "</div>"
-            '<div class="card" style="padding:20px 28px"><h3>Pipeline</h3>' + mm + "</div>"
+            + (_resolved_banner(eid, app.overrides[eid], len(app.overrides)) if eid in app.overrides else "")
+            + (_hitl_card(eid, res.get("review_reason")) if res.get("status") == "NEEDS_REVIEW" else "")
+            + '<div class="card" style="padding:20px 28px"><h3>Pipeline</h3>' + mm + "</div>"
             + docs
         )
         return body
@@ -1211,7 +1425,9 @@ document.addEventListener('DOMContentLoaded',()=>{
             f'<div class="cap">{_esc(u["fid"][1])}</div></div></div></div>'
         )
 
-        return head + diff + pipeline + docs
+        hitl_card = _hitl_card(eid, res.get("review_reason")) if res.get("status") == "NEEDS_REVIEW" else ""
+        banner = _resolved_banner(eid, app.overrides[eid], len(app.overrides)) if eid in app.overrides else ""
+        return head + banner + hitl_card + diff + pipeline + docs
 
     def render_score(self, app: App) -> str:
         sc = app.score
@@ -1322,8 +1538,49 @@ class Handler(BaseHTTPRequestHandler):
             m = re.fullmatch(r"/api/email/(\S+)", path)
             if m and m.group(1) in app.details:
                 return self._json(app.detail(m.group(1)))
+            m = re.fullmatch(r"/api/hitl/explain/(\S+)", path)
+            if m and m.group(1) in app.details:
+                return self._json(app.explain(m.group(1)))
+            m = re.fullmatch(r"/api/review/(\S+)", path)
+            if m and m.group(1) in app.details:
+                return self._json(app.store.get(m.group(1)) or {"email_id": m.group(1), "resolved": False})
+            if path == "/api/hitl/status":
+                return self._json({"backend": app.store.backend, "config": {
+                    "supabase": bool(app.store.cfg.get("configured")),
+                    "gemini": bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")),
+                }})
             if path == "/favicon.ico":
                 return self._send(204, b"", "image/x-icon")
+            return self._err(404, "not found")
+        except Exception as exc:  # noqa: BLE001
+            self._err(500, f"internal error: {exc}")
+
+    def do_POST(self):  # noqa: N802
+        try:
+            parsed = urlparse(self.path)
+            if parsed.path == "/api/review":
+                length = int(self.headers.get("Content-Length", "0") or 0)
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                eid = payload.get("email_id", "")
+                if eid not in app.details:
+                    return self._json({"error": "unknown email_id"}, 404)
+                if payload.get("resolved_category") not in CATEGORIES:
+                    return self._json({"error": "bad resolved_category"}, 400)
+                if payload.get("resolved_status") not in STATUSES:
+                    return self._json({"error": "bad resolved_status"}, 400)
+                saved = app.resolve(eid, payload)
+                return self._json({"ok": True, **saved})
+            if parsed.path == "/api/revert":
+                length = int(self.headers.get("Content-Length", "0") or 0)
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                eid = payload.get("email_id", "")
+                if eid not in app.details:
+                    return self._json({"error": "unknown email_id"}, 404)
+                saved = app.revert(eid)
+                return self._json({"ok": True, **saved})
+            if parsed.path == "/api/revert-all":
+                saved = app.reset_all()
+                return self._json({"ok": True, **saved})
             return self._err(404, "not found")
         except Exception as exc:  # noqa: BLE001
             self._err(500, f"internal error: {exc}")
@@ -1366,6 +1623,9 @@ def main() -> int:
     dev_mode = args.dev
     print(f"building pipeline over {args.data_dir} ...")
     app = App(args.data_dir, args.gt)
+    print(f"HITL backend: {app.store.backend} "
+          f"(supabase={'on' if app.store.cfg.get('configured') else 'off'}, "
+          f"gemini={'on' if (os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')) else 'off'})")
     if app.score:
         s = app.score
         print(f"local score: final={s['final_score']} stage1_macro_f1={s['stage1']['macro_f1']} "
