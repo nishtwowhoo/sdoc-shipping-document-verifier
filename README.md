@@ -356,3 +356,5 @@ Then open **http://localhost:8080** in your browser.
 ## 📄 License
 
 This project was developed for the **Averis x Monash Hackathon 2026**.
+
+Slide Deck: https://canva.link/i01a79dcvw0u49t
