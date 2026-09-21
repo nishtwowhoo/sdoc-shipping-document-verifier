@@ -2,7 +2,7 @@
 
 Env vars (also read from .env in project root):
   GEMINI_API_KEY - Google Gemini key (chatbox + pipeline classification)
-  GEMINI_MODEL        - default: gemini-3.6-flash (override without code change)
+  GEMINI_MODEL        - default: gemini-3-flash-preview (override without code change)
   SUPABASE_URL        - e.g. https://xyz.supabase.co
   SUPABASE_KEY        - anon or service_role key (also accepts
                         SUPABASE_ANON_KEY / SUPABASE_SERVICE_KEY)
@@ -57,17 +57,18 @@ def load_dotenv(path: str = ".env") -> None:
 
 load_dotenv()
 
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
 
 def _chatbox_key() -> str:
     """Single project key for chatbox (and pipeline classification)."""
     return os.environ.get("GEMINI_API_KEY", "")
 
 
-def _gemini_post(prompt: str, json_mode: bool) -> str:
+def _gemini_post(prompt: str, json_mode: bool, max_tokens: int) -> str:
     """POST to Gemini with retries on transient failures.
 
-    Retries 5xx/timeouts with backoff, and 429 honoring the server's
+    Token/latency budget: no thinking pass, low temperature, hard output
+    cap. Retries 5xx/timeouts with backoff, and 429 honoring the server's
     "retry in Xs" delay (free-tier quota). Non-retryable errors
     (bad key, unknown model) raise immediately.
     """
@@ -78,9 +79,16 @@ def _gemini_post(prompt: str, json_mode: bool) -> str:
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{GEMINI_MODEL}:generateContent?key={key}"
     )
-    body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
+    body: dict = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "maxOutputTokens": max_tokens,
+            "temperature": 0.3,
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
+    }
     if json_mode:
-        body["generationConfig"] = {"responseMimeType": "application/json"}
+        body["generationConfig"]["responseMimeType"] = "application/json"
     payload = json.dumps(body).encode()
     last_exc: Exception | None = None
     for attempt in range(3):
@@ -124,19 +132,20 @@ def describe_error(exc: Exception) -> str:
 
 
 def _email_context(email: dict, docs: list, review_reason: str | None) -> str:
+    """Minimal context: identifiers + short excerpts (token budget)."""
     docs_txt = []
-    for d in (docs or [])[:3]:
+    for d in (docs or [])[:2]:
         docs_txt.append(
             f"- {d.get('path')}: kind={d.get('kind')} "
             f"readable={d.get('readable')} "
-            f"text={(d.get('text') or '')[:1200]}"
+            f"text={(d.get('text') or '')[:400]}"
         )
     return (
         f"email_id: {email.get('email_id')}\n"
         f"subject: {email.get('subject')}\n"
         f"from: {email.get('from')}\n"
         f"review_reason: {review_reason}\n"
-        f"body (first 2000 chars): {(email.get('body') or '')[:2000]}\n"
+        f"body (first 800 chars): {(email.get('body') or '')[:800]}\n"
         "attachments:\n" + "\n".join(docs_txt)
     )
 
@@ -179,11 +188,11 @@ def gemini_explain(email: dict, docs: list, review_reason: str | None,
                 + ctx + "\n\n"
                 f"The human reviewer asks: {question}\n\n"
                 "Answer directly in plain text (no JSON), using the email context above. "
-                "Be concise and specific to this email. "
+                "Be terse: at most 3 short sentences. "
                 "If the message is just a pleasantry or acknowledgment (e.g. thanks, ok), "
                 "reply briefly and warmly WITHOUT re-explaining the whole case."
             )
-            text = _gemini_post(prompt, json_mode=False)
+            text = _gemini_post(prompt, json_mode=False, max_tokens=200)
             return {
                 "answer": text[:2000],
                 "review_reason": review_reason,
@@ -192,12 +201,13 @@ def gemini_explain(email: dict, docs: list, review_reason: str | None,
         prompt = (
             "You are a shipping-document HITL assistant. An email was flagged NEEDS_REVIEW.\n"
             + ctx + "\n\n"
-            "Reply ONLY as JSON with keys: explanation (2-4 sentences, plain language), "
-            "suggested_fix (1-3 concrete next steps), "
+            "Reply ONLY as JSON with keys: explanation (max 2 short sentences), "
+            "suggested_fix (1 concrete next step, max 1 sentence), "
             "suggested_category (one of BL_COMPARISON, SI_REQUEST, INVOICE_QUERY, GENERAL, SPAM), "
-            "suggested_status (one of OK, MISMATCH, NEEDS_REVIEW)."
+            "suggested_status (one of OK, MISMATCH, NEEDS_REVIEW). "
+            "Keep every value terse."
         )
-        text = _gemini_post(prompt, json_mode=True)
+        text = _gemini_post(prompt, json_mode=True, max_tokens=300)
         parsed = json.loads(text)
         return {
             "explanation": str(parsed.get("explanation", ""))[:2000],

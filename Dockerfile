@@ -4,7 +4,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir pypdf python-docx openpyxl
 COPY . .
 # HITL defaults (secrets passed at runtime with -e, never baked in):
-ENV GEMINI_MODEL=gemini-3.6-flash \
+ENV GEMINI_MODEL=gemini-3-flash-preview \
     SUPABASE_TABLE=hitl_reviews \
     HITL_LOCAL_FILE=hitl_overrides.json
 EXPOSE 8081

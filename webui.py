@@ -36,6 +36,7 @@ from comparator import REVIEW_REASONS, analyze_email, _parse_doc
 from extractor import FIELDS, is_placeholder
 from loader import Inbox
 import hitl
+import actions
 
 STATUSES = ("OK", "MISMATCH", "NEEDS_REVIEW")
 
@@ -239,6 +240,7 @@ class App:
         self.data_dir = data_dir
         self.inbox, self.rows, self.details = _build(data_dir)
         self.store = hitl.Store(data_dir)
+        self.action_store = actions.ActionStore(data_dir)
         self._explain_cache: dict = {}
         self._apply_overrides()
         for r in self.rows:
@@ -276,7 +278,7 @@ class App:
         record = {
             "email_id": email_id,
             "orig_category": payload.get("orig_category", row["category"]),
-            "orig_status": "NEEDS_REVIEW",
+            "orig_status": payload.get("orig_status", row["status"]),
             "review_reason": row.get("review_reason"),
             "resolved_category": payload.get("resolved_category", row["category"]),
             "resolved_status": payload.get("resolved_status", "OK"),
@@ -347,6 +349,27 @@ class App:
         }
         return saved
 
+    def draft(self, email_id: str) -> dict:
+        row = next(r for r in self.rows if r["email_id"] == email_id)
+        d = self.detail(email_id)
+        out = actions.build_draft(row, d)
+        out["log"] = self.action_store.for_email(email_id)
+        if row.get("status") == "MISMATCH":
+            out["resolve_suggest"] = {"category": row["category"], "status": "OK"}
+        else:
+            out["resolve_suggest"] = {"category": "GENERAL", "status": "OK"}
+        return out
+
+    def approve_draft(self, payload: dict) -> dict:
+        return self.action_store.save({
+            "email_id": payload.get("email_id", ""),
+            "action": payload.get("action", "approve_and_reply"),
+            "draft_to": payload.get("to", ""),
+            "draft_subject": payload.get("subject", ""),
+            "draft_body": payload.get("body", ""),
+            "approved_by": payload.get("approved_by", "human"),
+        })
+
     def explain(self, email_id: str, question: str | None = None) -> dict:
         row = next(r for r in self.rows if r["email_id"] == email_id)
         if not question and email_id in self._explain_cache:
@@ -413,8 +436,6 @@ class App:
 
 
 def _hitl_card(eid: str, review_reason: str | None) -> str:
-    cats = "".join(f'<option value="{c}">{c}</option>' for c in CATEGORIES)
-    stats = "".join(f'<option value="{s}">{s}</option>' for s in STATUSES)
     return f"""
 <div class="card" id="hitl-card">
 <style>#hitl-card .ai-body{{font-size:13.5px;line-height:1.65;color:var(--text,#222B36)}}
@@ -429,24 +450,13 @@ def _hitl_card(eid: str, review_reason: str | None) -> str:
 <input id="hitl-q" placeholder="Ask a follow-up, e.g. what file is missing?" style="flex:1;min-width:220px;height:37px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
 <button class="btn outline" id="hitl-ask">Ask AI</button>
 </div>
-<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
-<h3>Resolve review</h3>
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<select class="field" id="hitl-cat">{cats}</select>
-<select class="field" id="hitl-status">{stats}</select>
-<input id="hitl-note" placeholder="Reviewer note (optional)" style="flex:1;min-width:180px;height:39px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
-<button class="btn outline" id="hitl-resolve">Resolve</button>
-</div>
-<div class="cell-mut" id="hitl-msg" style="margin-top:8px"></div>
-<div class="cell-mut" style="margin-top:4px">Saved to Supabase table <b>hitl_reviews</b> when configured, else <b>hitl_overrides.json</b>. Resolving moves it out of NEEDS_REVIEW.</div>
-</div>
+<div class="cell-mut" style="margin-top:12px">To close this review, use <b>Resolve</b> in the Action engine card below — the AI suggestion pre-fills it.</div>
 </div>
 <script>
 (function(){{
 const eid={json.dumps(eid)};
 let lastAI=null;
 const out=document.getElementById('hitl-out');
-const msg=document.getElementById('hitl-msg');
 const esc=s=>(s+'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
 const md=s=>{{
   let h=esc(s||'—');
@@ -479,9 +489,10 @@ async function explain(question){{
       '<div style="margin:4px 0">'+md(j.answer)+'</div>');
     return;
   }}
-  lastAI=j;
-  document.getElementById('hitl-cat').value=j.suggested_category||'GENERAL';
-  document.getElementById('hitl-status').value=j.suggested_status||'OK';
+  lastAI=j; window._hitlAI=j;
+  const _cat=document.getElementById('act-cat'), _st=document.getElementById('act-status');
+  if(_cat) _cat.value=j.suggested_category||'GENERAL';
+  if(_st) _st.value=j.suggested_status||'OK';
   out.innerHTML='<div class="keyval"><b>What is wrong</b></div><div style="margin:4px 0 10px">'+md(j.explanation||'—')+'</div>'
     +'<div class="keyval"><b>Suggested fix</b></div><div style="margin:4px 0">'+md(j.suggested_fix||'—')+'</div>'
     +'<div class="cell-mut" style="margin-top:6px">source: '+esc(j.source||'?')+' · backend: '+esc(j.backend||'?')+' · reason: '+esc(j.review_reason||'—')+'</div>';
@@ -493,19 +504,92 @@ document.getElementById('hitl-ask').addEventListener('click',()=>{{
   box.value='';
   explain(val);
 }});
-document.getElementById('hitl-resolve').addEventListener('click',async ()=>{{
-  msg.textContent='Saving…';
+explain('');
+}})();
+</script>"""
+
+
+def _action_card(eid: str, status: str) -> str:
+    cats = "".join(f'<option value="{c}">{c}</option>' for c in CATEGORIES)
+    stats = "".join(f'<option value="{s}">{s}</option>' for s in STATUSES)
+    title = ("Amendment request" if status == "MISMATCH"
+             else "Follow-up request")
+    return f"""
+<div class="card" id="action-card">
+<h3>Action engine · {title}</h3>
+<div class="cell-mut">Auto-drafted from this email's pipeline facts. Review, edit, then approve.</div>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<input id="act-to" placeholder="To" style="flex:1;min-width:180px;height:37px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
+<input id="act-subject" placeholder="Subject" style="flex:2;min-width:220px;height:37px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
+</div>
+<textarea id="act-body" rows="10" style="width:100%;margin-top:8px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;font:13px/1.6 inherit">Loading draft…</textarea>
+<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+<button class="btn ghost" id="act-copy">Copy</button>
+<button class="btn ghost" id="act-mailto">Open in mail app</button>
+<button class="btn outline" id="act-approve">Approve &amp; log reply</button>
+</div>
+<div class="cell-mut" id="act-msg" style="margin-top:8px"></div>
+<div id="act-log" class="cell-mut" style="margin-top:4px"></div>
+<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+<h3>Resolve this review</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<select class="field" id="act-cat">{cats}</select>
+<select class="field" id="act-status">{stats}</select>
+<button class="btn outline" id="act-resolve">Resolve</button>
+</div>
+</div>
+</div>
+<script>
+(function(){{
+const eid={json.dumps(eid)};
+const msg=document.getElementById('act-msg');
+const toEl=document.getElementById('act-to');
+const subEl=document.getElementById('act-subject');
+const bodyEl=document.getElementById('act-body');
+async function load(){{
+  const r=await fetch('/api/draft/'+encodeURIComponent(eid));
+  const j=await r.json();
+  toEl.value=j.to||''; subEl.value=j.subject||''; bodyEl.value=j.body||'';
+  document.getElementById('act-cat').value=(j.resolve_suggest&&j.resolve_suggest.category)||'GENERAL';
+  document.getElementById('act-status').value=(j.resolve_suggest&&j.resolve_suggest.status)||'OK';
+  const log=j.log||[];
+  if(log.length) document.getElementById('act-log').textContent=log.length+' approved repl'+(log.length>1?'ies':'y')+' logged for this email.';
+}}
+document.getElementById('act-copy').addEventListener('click',async ()=>{{
+  const txt='To: '+toEl.value+'\\nSubject: '+subEl.value+'\\n\\n'+bodyEl.value;
+  try{{ await navigator.clipboard.writeText(txt); msg.textContent='Copied to clipboard.'; }}
+  catch(e){{ bodyEl.select(); document.execCommand('copy'); msg.textContent='Copied (fallback).'; }}
+}});
+document.getElementById('act-mailto').addEventListener('click',()=>{{
+  location.href='mailto:'+encodeURIComponent(toEl.value)
+    +'?subject='+encodeURIComponent(subEl.value)
+    +'&body='+encodeURIComponent(bodyEl.value);
+}});
+document.getElementById('act-approve').addEventListener('click',async ()=>{{
+  if(!confirm('Approve this reply for '+eid+'? It will be logged.'))return;
+  msg.textContent='Logging…';
+  const r=await fetch('/api/draft/approve',{{
+    method:'POST',headers:{{'Content-Type':'application/json'}},
+    body:JSON.stringify({{email_id:eid,to:toEl.value,subject:subEl.value,body:bodyEl.value}})}});
+  const j=await r.json();
+  msg.textContent='Approved & logged via '+j.backend+'. You can now Resolve below.';
+  load();
+}});
+document.getElementById('act-resolve').addEventListener('click',async ()=>{{
+  if(!confirm('Resolve '+eid+' with the category/status above?'))return;
+  msg.textContent='Resolving…';
+  const payload={{email_id:eid,
+    resolved_category:document.getElementById('act-cat').value,
+    resolved_status:document.getElementById('act-status').value,
+    ai:(window._hitlAI||{{}})}};
   const r=await fetch('/api/review',{{
     method:'POST',headers:{{'Content-Type':'application/json'}},
-    body:JSON.stringify({{email_id:eid,
-      resolved_category:document.getElementById('hitl-cat').value,
-      resolved_status:document.getElementById('hitl-status').value,
-      note:document.getElementById('hitl-note').value,ai:lastAI||{{}}}})}});
-  const j=await r.json();
-  msg.textContent='Saved via '+j.backend+'. Reloading…';
+    body:JSON.stringify(payload)}});
+const j=await r.json();
+  msg.textContent='Resolved via '+j.backend+'. Reloading…';
   setTimeout(()=>location.reload(),700);
 }});
-explain('');
+load();
 }})();
 </script>"""
 
@@ -740,7 +824,7 @@ _CLASSIC_SIDEBAR_LINKS = [
 ]
 
 _CLASSIC_SIDEBAR = """
-<div class="wordmark">Shipment <span class="dot">·</span> Scan</div>
+<div class="wordmark">Waybill Copilot</div>
 <div class="ssearch"><span class="sr-ico">{search}</span>
   <input id="side-search" placeholder="Search dashboard…"></div>
 <div class="shead">Product dashboards</div>
@@ -771,7 +855,7 @@ _CLASSIC_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   <main class="main">
     <div class="topbar">
       <div>
-        <div class="breadcrumb">Shipment Scan <b>›</b> All emails</div>
+        <div class="breadcrumb">Waybill Copilot <b>›</b> All emails</div>
         <div class="title">Inbox for
           <select><option>bundle</option><option>local data</option></select></div>
       </div>
@@ -958,6 +1042,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             "</div>"
             + (_resolved_banner(eid, app.overrides[eid], len(app.overrides)) if eid in app.overrides else "")
             + (_hitl_card(eid, res.get("review_reason")) if res.get("status") == "NEEDS_REVIEW" else "")
+            + (_action_card(eid, res.get("status")) if res.get("status") in ("MISMATCH", "NEEDS_REVIEW") else "")
             + '<div class="card" style="padding:20px 28px"><h3>Pipeline</h3>' + mm + "</div>"
             + docs
         )
@@ -1161,7 +1246,7 @@ for _row in _MODERN_SIDEBAR_LINKS:
     _prev_head = _row[0]
 
 _MODERN_SIDEBAR = """
-<div class="wordmark">Shipment <span class="dot"></span> Scan</div>
+<div class="wordmark">Waybill Copilot</div>
 {groups}
 <div class="pin"></div>
 <div class="shead">Actions</div>
@@ -1192,7 +1277,7 @@ _MODERN_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   <main class="main">
     <div class="topbar">
       <div>
-        <div class="breadcrumb">Shipment Scan <b>›</b> All emails</div>
+        <div class="breadcrumb">Waybill Copilot <b>›</b> All emails</div>
         <div class="title">Inbox
           <select><option>bundle</option><option>local data</option></select></div>
       </div>
@@ -1475,7 +1560,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
         hitl_card = _hitl_card(eid, res.get("review_reason")) if res.get("status") == "NEEDS_REVIEW" else ""
         banner = _resolved_banner(eid, app.overrides[eid], len(app.overrides)) if eid in app.overrides else ""
-        return head + banner + hitl_card + diff + pipeline + docs
+        action = _action_card(eid, res.get("status")) if res.get("status") in ("MISMATCH", "NEEDS_REVIEW") else ""
+        return head + banner + hitl_card + action + diff + pipeline + docs
 
     def render_score(self, app: App) -> str:
         sc = app.score
@@ -1592,6 +1678,9 @@ class Handler(BaseHTTPRequestHandler):
             m = re.fullmatch(r"/api/review/(\S+)", path)
             if m and m.group(1) in app.details:
                 return self._json(app.store.get(m.group(1)) or {"email_id": m.group(1), "resolved": False})
+            m = re.fullmatch(r"/api/draft/(\S+)", path)
+            if m and m.group(1) in app.details:
+                return self._json(app.draft(m.group(1)))
             if path == "/api/hitl/status":
                 return self._json({"backend": app.store.backend, "config": {
                     "supabase": bool(app.store.cfg.get("configured")),
@@ -1628,6 +1717,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"ok": True, **saved})
             if parsed.path == "/api/revert-all":
                 saved = app.reset_all()
+                return self._json({"ok": True, **saved})
+            if parsed.path == "/api/draft/approve":
+                length = int(self.headers.get("Content-Length", "0") or 0)
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                eid = payload.get("email_id", "")
+                if eid not in app.details:
+                    return self._json({"error": "unknown email_id"}, 404)
+                saved = app.approve_draft(payload)
                 return self._json({"ok": True, **saved})
             return self._err(404, "not found")
         except Exception as exc:  # noqa: BLE001
