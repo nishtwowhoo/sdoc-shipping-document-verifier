@@ -1,0 +1,9 @@
+{
+  "email_id": "009",
+  "from": "client@exporter.com",
+  "to": "forwarding@agent.com",
+  "subject": "Please prepare the Shipping Instruction for booking 88914",
+  "date": "2026-09-06",
+  "body": "We need you to issue the Shipping Instruction for our new booking as soon as possible.",
+  "attachments": []
+}

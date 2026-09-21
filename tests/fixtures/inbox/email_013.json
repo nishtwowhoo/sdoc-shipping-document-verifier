@@ -1,0 +1,9 @@
+{
+  "email_id": "013",
+  "from": "ops@shippingline.com",
+  "to": "forwarding@agent.com",
+  "subject": "Compare draft BL with SI",
+  "date": "2026-09-10",
+  "body": "Please reconcile the scanned draft BL attachment against our SI.",
+  "attachments": ["email_013_SI.txt", "email_013_BL.txt"]
+}
