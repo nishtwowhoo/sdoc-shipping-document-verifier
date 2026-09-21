@@ -1,0 +1,24 @@
+# Render Blueprint: one-click deploy of the SDOC dashboard.
+# Dashboard → New → Blueprint → select this repo. Render builds the
+# Dockerfile, injects $PORT, and serves webui.py directly (no serverless
+# adaptation needed). Secrets are entered in the Render dashboard, never git.
+services:
+  - type: web
+    name: sdoc-verifier
+    runtime: docker
+    plan: free
+    branch: main
+    healthCheckPath: /api/hitl/status
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3-flash-preview
+      - key: SUPABASE_TABLE
+        value: hitl_reviews
+      - key: HITL_LOCAL_FILE
+        value: hitl_overrides.json
