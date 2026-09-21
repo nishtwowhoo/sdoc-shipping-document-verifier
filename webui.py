@@ -239,6 +239,7 @@ class App:
         self.data_dir = data_dir
         self.inbox, self.rows, self.details = _build(data_dir)
         self.store = hitl.Store(data_dir)
+        self._explain_cache: dict = {}
         self._apply_overrides()
         for r in self.rows:
             r["ui"] = _ui_metrics(r, self.details[r["email_id"]])
@@ -324,12 +325,14 @@ class App:
         """Delete a HITL override; email returns to pipeline NEEDS_REVIEW."""
         saved = self.store.delete(email_id)
         self.overrides.pop(email_id, None)
+        self._explain_cache.pop(email_id, None)
         self._refresh_row(email_id)
         return saved
 
     def reset_all(self) -> dict:
         saved = self.store.clear()
         self.overrides = {}
+        self._explain_cache = {}
         _, fresh_rows, fresh_details = _build(self.data_dir)
         self.rows = fresh_rows
         self.details = fresh_details
@@ -344,8 +347,13 @@ class App:
         }
         return saved
 
-    def explain(self, email_id: str) -> dict:
+    def explain(self, email_id: str, question: str | None = None) -> dict:
         row = next(r for r in self.rows if r["email_id"] == email_id)
+        if not question and email_id in self._explain_cache:
+            out = dict(self._explain_cache[email_id])
+            out["backend"] = self.store.backend
+            out["cached"] = True
+            return out
         extra = self.details[email_id]
         email = {
             "email_id": email_id,
@@ -353,9 +361,11 @@ class App:
             "from": row.get("from", ""),
             "body": extra.get("body", ""),
         }
-        out = hitl.gemini_explain(email, extra.get("docs", []), row.get("review_reason"))
+        out = hitl.gemini_explain(email, extra.get("docs", []), row.get("review_reason"), question)
         out["backend"] = self.store.backend
         out["review_reason"] = row.get("review_reason")
+        if not question and out.get("source") == "gemini":
+            self._explain_cache[email_id] = dict(out)
         return out
 
     def filtered(self, q) -> list:
@@ -407,9 +417,14 @@ def _hitl_card(eid: str, review_reason: str | None) -> str:
     stats = "".join(f'<option value="{s}">{s}</option>' for s in STATUSES)
     return f"""
 <div class="card" id="hitl-card">
+<style>#hitl-card .ai-body{{font-size:13.5px;line-height:1.65;color:var(--text,#222B36)}}
+#hitl-card .ai-body ul{{margin:6px 0;padding-left:20px}}
+#hitl-card .ai-body li{{margin:3px 0}}
+#hitl-card .ai-body code{{background:#EEF1F5;border-radius:6px;padding:1px 6px;font-size:12px}}</style>
 <h3>AI agent · human-in-the-loop</h3>
 <div class="cell-mut">Reason: <b>{_esc(review_reason or "—")}</b> · Ask what is wrong with this email.</div>
 <div id="hitl-out" style="margin-top:10px"><div class="cell-mut">Loading AI explanation…</div></div>
+<div id="hitl-thread" style="margin-top:6px"></div>
 <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
 <input id="hitl-q" placeholder="Ask a follow-up, e.g. what file is missing?" style="flex:1;min-width:220px;height:37px;border:1px solid var(--line);border-radius:11px;padding:0 12px">
 <button class="btn outline" id="hitl-ask">Ask AI</button>
@@ -433,18 +448,51 @@ let lastAI=null;
 const out=document.getElementById('hitl-out');
 const msg=document.getElementById('hitl-msg');
 const esc=s=>(s+'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
+const md=s=>{{
+  let h=esc(s||'—');
+  h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+  h=h.replace(/\\*\\*([^*]+)\\*\\*/g,'<strong>$1</strong>');
+  const lines=h.split(/\\n/), out=[], list=[];
+  const flush=()=>{{ if(list.length){{ out.push('<ul>'+list.join('')+'</ul>'); list.length=0; }} }};
+  for(const ln of lines){{
+    const m=ln.match(/^\\s*(?:\\*|-|•)\\s+(.*)$/);
+    if(m) list.push('<li>'+m[1]+'</li>');
+    else{{ flush(); if(ln.trim()) out.push(ln); }}
+  }}
+  flush();
+  return '<div class="ai-body">'+out.join('<br>')+'</div>';
+}};
 async function explain(question){{
-  out.innerHTML='<div class="cell-mut">Thinking…</div>';
+  const thread=document.getElementById('hitl-thread');
+  if(!question) out.innerHTML='<div class="cell-mut">Thinking…</div>';
+  else thread.innerHTML+='<div class="keyval" style="margin-top:8px"><b>You:</b> '+esc(question)+'</div><div class="cell-mut">Thinking…</div>';
   const url='/api/hitl/explain/'+encodeURIComponent(eid)+(question?'?q='+encodeURIComponent(question):'');
   const r=await fetch(url); const j=await r.json();
+  if(j.error||j.source==='error'){{
+    const html='<div class="keyval"><b>AI unavailable</b></div><div style="margin:4px 0">'+esc(j.explanation||'AI ran into an error.')+'</div>';
+    if(!question) out.innerHTML=html;
+    else thread.innerHTML=thread.innerHTML.replace('<div class="cell-mut">Thinking…</div>',html);
+    return;
+  }}
+  if(j.answer){{
+    thread.innerHTML=thread.innerHTML.replace('<div class="cell-mut">Thinking…</div>',
+      '<div style="margin:4px 0">'+md(j.answer)+'</div>');
+    return;
+  }}
   lastAI=j;
   document.getElementById('hitl-cat').value=j.suggested_category||'GENERAL';
   document.getElementById('hitl-status').value=j.suggested_status||'OK';
-  out.innerHTML='<div class="keyval"><b>What is wrong</b></div><div style="margin:4px 0 10px">'+esc(j.explanation||'—')+'</div>'
-    +'<div class="keyval"><b>Suggested fix</b></div><div style="margin:4px 0">'+esc(j.suggested_fix||'—')+'</div>'
+  out.innerHTML='<div class="keyval"><b>What is wrong</b></div><div style="margin:4px 0 10px">'+md(j.explanation||'—')+'</div>'
+    +'<div class="keyval"><b>Suggested fix</b></div><div style="margin:4px 0">'+md(j.suggested_fix||'—')+'</div>'
     +'<div class="cell-mut" style="margin-top:6px">source: '+esc(j.source||'?')+' · backend: '+esc(j.backend||'?')+' · reason: '+esc(j.review_reason||'—')+'</div>';
 }}
-document.getElementById('hitl-ask').addEventListener('click',()=>explain(document.getElementById('hitl-q').value));
+document.getElementById('hitl-ask').addEventListener('click',()=>{{
+  const box=document.getElementById('hitl-q');
+  const val=box.value.trim();
+  if(!val) return;
+  box.value='';
+  explain(val);
+}});
 document.getElementById('hitl-resolve').addEventListener('click',async ()=>{{
   msg.textContent='Saving…';
   const r=await fetch('/api/review',{{
@@ -1540,14 +1588,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(app.detail(m.group(1)))
             m = re.fullmatch(r"/api/hitl/explain/(\S+)", path)
             if m and m.group(1) in app.details:
-                return self._json(app.explain(m.group(1)))
+                return self._json(app.explain(m.group(1), (q.get("q") or [""])[0] or None))
             m = re.fullmatch(r"/api/review/(\S+)", path)
             if m and m.group(1) in app.details:
                 return self._json(app.store.get(m.group(1)) or {"email_id": m.group(1), "resolved": False})
             if path == "/api/hitl/status":
                 return self._json({"backend": app.store.backend, "config": {
                     "supabase": bool(app.store.cfg.get("configured")),
-                    "gemini": bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")),
+                    "gemini": bool(os.environ.get("GEMINI_API_KEY")),
                 }})
             if path == "/favicon.ico":
                 return self._send(204, b"", "image/x-icon")
@@ -1625,7 +1673,7 @@ def main() -> int:
     app = App(args.data_dir, args.gt)
     print(f"HITL backend: {app.store.backend} "
           f"(supabase={'on' if app.store.cfg.get('configured') else 'off'}, "
-          f"gemini={'on' if (os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')) else 'off'})")
+          f"gemini={'on' if os.environ.get('GEMINI_API_KEY') else 'off'})")
     if app.score:
         s = app.score
         print(f"local score: final={s['final_score']} stage1_macro_f1={s['stage1']['macro_f1']} "

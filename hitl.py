@@ -1,8 +1,8 @@
 """HITL AI + Supabase backend for webui.py (stdlib only, no new pip deps).
 
 Env vars (also read from .env in project root):
-  GEMINI_API_KEY      - Google Gemini key for AI explanations
-  GEMINI_MODEL        - default: gemini-1.5-flash
+  GEMINI_API_KEY - Google Gemini key (chatbox + pipeline classification)
+  GEMINI_MODEL        - default: gemini-3.6-flash (override without code change)
   SUPABASE_URL        - e.g. https://xyz.supabase.co
   SUPABASE_KEY        - anon or service_role key (also accepts
                         SUPABASE_ANON_KEY / SUPABASE_SERVICE_KEY)
@@ -31,6 +31,8 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
+import time
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -55,136 +57,163 @@ def load_dotenv(path: str = ".env") -> None:
 
 load_dotenv()
 
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
-FALLBACK = {
-    "missing_attachment": {
-        "explanation": (
-            "A BL comparison was requested but no draft Bill of Lading "
-            "attachment was found. The pipeline escalated this instead of "
-            "guessing, so a person must confirm whether the BL is truly "
-            "missing or was sent separately."
-        ),
-        "fix": "Ask the shipper/forwarder to re-send the draft BL, then re-run. If the email was never a comparison request, re-categorize it (e.g. SI_REQUEST or GENERAL) and mark OK.",
-        "suggested_category": "BL_COMPARISON",
-        "suggested_status": "OK",
-    },
-    "wrong_doc_type": {
-        "explanation": (
-            "An attachment was present but it is not a Bill of Lading "
-            "(e.g. Commercial Invoice, Packing List, or Certificate of Origin). "
-            "Comparing it against the Shipping Instruction would be meaningless, "
-            "so human review is required."
-        ),
-        "fix": "Request the correct draft BL document. If no BL comparison is actually needed, re-categorize to the true intent (often GENERAL) and mark OK.",
-        "suggested_category": "BL_COMPARISON",
-        "suggested_status": "OK",
-    },
-    "unreadable": {
-        "explanation": (
-            "At least one attachment could not be read (corrupt, scanned image "
-            "without text, empty file, or unsupported encoding). The extractor "
-            "refused to compare garbled content."
-        ),
-        "fix": "Ask for a re-upload as searchable PDF/TXT/DOCX. If the file opens fine for you, note that in the review and resolve manually.",
-        "suggested_category": "BL_COMPARISON",
-        "suggested_status": "OK",
-    },
-    "missing_value": {
-        "explanation": (
-            "The Shipping Instruction contains placeholder values such as ???, "
-            "_______, TBA or N/A. The pipeline will not sign off on incomplete "
-            "source data."
-        ),
-        "fix": "Get the completed SI with all 7 fields filled (shipper, consignee, notify_party, POL, POD, container_count, gross_weight_kg), then resolve as BL_COMPARISON / OK or MISMATCH once compared.",
-        "suggested_category": "BL_COMPARISON",
-        "suggested_status": "OK",
-    },
-}
+def _chatbox_key() -> str:
+    """Single project key for chatbox (and pipeline classification)."""
+    return os.environ.get("GEMINI_API_KEY", "")
 
 
-def fallback_explain(review_reason: str | None) -> dict:
-    fb = FALLBACK.get(review_reason or "", {
-        "explanation": "This email needs human review before the pipeline can close it.",
-        "fix": "Read the body + attachments, pick the correct category, and resolve.",
-        "suggested_category": "GENERAL",
-        "suggested_status": "OK",
-    })
-    return {
-        "explanation": fb["explanation"],
-        "suggested_fix": fb["fix"],
-        "suggested_category": fb["suggested_category"],
-        "suggested_status": fb["suggested_status"],
-        "source": "fallback",
-    }
+def _gemini_post(prompt: str, json_mode: bool) -> str:
+    """POST to Gemini with retries on transient failures.
+
+    Retries 5xx/timeouts with backoff, and 429 honoring the server's
+    "retry in Xs" delay (free-tier quota). Non-retryable errors
+    (bad key, unknown model) raise immediately.
+    """
+    import re
+
+    key = _chatbox_key()
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{GEMINI_MODEL}:generateContent?key={key}"
+    )
+    body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
+    if json_mode:
+        body["generationConfig"] = {"responseMimeType": "application/json"}
+    payload = json.dumps(body).encode()
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=25) as r:
+                data = json.loads(r.read().decode("utf-8", "replace"))
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as exc:
+            last_exc = exc
+            if exc.code == 429:
+                try:
+                    detail = exc.read().decode("utf-8", "replace")
+                except Exception:
+                    detail = ""
+                m = re.search(r"retry in ([\d.]+)s", detail)
+                wait = min(float(m.group(1)) + 1, 65) if m else 30
+                exc._retry_after = wait  # stash for the error message
+                exc._detail = detail[:300]
+                time.sleep(wait)
+                continue
+            if exc.code is None or not (500 <= exc.code < 600):
+                raise  # auth / bad request / not found: retrying won't help
+        except Exception as exc:  # timeouts, connection resets: transient
+            last_exc = exc
+        time.sleep(2 * (attempt + 1))
+    assert last_exc is not None
+    raise last_exc
 
 
-def _gemini_key() -> str:
-    return os.environ.get("GEMINI_API_KEY", "") or os.environ.get("GOOGLE_API_KEY", "")
+def describe_error(exc: Exception) -> str:
+    """Human-friendly one-liner for a Gemini failure."""
+    import re
+
+    if isinstance(exc, urllib.error.HTTPError) and exc.code == 429:
+        wait = getattr(exc, "_retry_after", None)
+        hint = f" Retry in ~{wait:.0f}s." if wait else ""
+        return ("AI rate-limited (free-tier quota, ~20 requests). "
+                f"Wait a minute and ask again.{hint}")
+    return f"AI ran into an error: {exc}"
 
 
-def gemini_explain(email: dict, docs: list, review_reason: str | None) -> dict:
-    """Ask Gemini what's wrong; fall back to rules when no key/offline."""
-    fb = fallback_explain(review_reason)
-    key = _gemini_key()
-    if not key:
-        return fb
+def _email_context(email: dict, docs: list, review_reason: str | None) -> str:
+    docs_txt = []
+    for d in (docs or [])[:3]:
+        docs_txt.append(
+            f"- {d.get('path')}: kind={d.get('kind')} "
+            f"readable={d.get('readable')} "
+            f"text={(d.get('text') or '')[:1200]}"
+        )
+    return (
+        f"email_id: {email.get('email_id')}\n"
+        f"subject: {email.get('subject')}\n"
+        f"from: {email.get('from')}\n"
+        f"review_reason: {review_reason}\n"
+        f"body (first 2000 chars): {(email.get('body') or '')[:2000]}\n"
+        "attachments:\n" + "\n".join(docs_txt)
+    )
+
+
+PLEASANTRIES = re.compile(
+    r"^(thanks?|thank\s*you|thx|ok(ay)?|got\s*it|noted|great|perfect|"
+    r"understood|cool|awesome|nice|cheers)[\s.!]*$",
+    re.IGNORECASE,
+)
+
+
+def gemini_explain(email: dict, docs: list, review_reason: str | None,
+                   question: str | None = None) -> dict:
+    """Real Gemini chatbox. No rule-based answers; errors are explicit.
+
+    First call (no question) returns structured JSON; follow-ups return
+    free-text answers. Single-shot: each call carries full email context.
+    Pure pleasantries are answered locally (no quota burned).
+    """
+    if not _chatbox_key():
+        return {
+            "error": "unavailable",
+            "explanation": ("AI unavailable: GEMINI_API_KEY is not set. "
+                            "Add it to your .env file or pass -e GEMINI_API_KEY=... to docker run."),
+            "source": "error",
+        }
     try:
-        docs_txt = []
-        for d in (docs or [])[:3]:
-            docs_txt.append(
-                f"- {d.get('path')}: kind={d.get('kind')} "
-                f"readable={d.get('readable')} "
-                f"text={(d.get('text') or '')[:1200]}"
+        ctx = _email_context(email, docs, review_reason)
+        if question:
+            if PLEASANTRIES.match(question.strip()):
+                return {
+                    "answer": ("You're welcome! If you've got what you need, "
+                               "pick the corrected category above and hit Resolve — "
+                               "or ask me anything else about this email."),
+                    "review_reason": review_reason,
+                    "source": "local",
+                }
+            prompt = (
+                "You are a shipping-document HITL assistant. An email was flagged NEEDS_REVIEW.\n"
+                + ctx + "\n\n"
+                f"The human reviewer asks: {question}\n\n"
+                "Answer directly in plain text (no JSON), using the email context above. "
+                "Be concise and specific to this email. "
+                "If the message is just a pleasantry or acknowledgment (e.g. thanks, ok), "
+                "reply briefly and warmly WITHOUT re-explaining the whole case."
             )
+            text = _gemini_post(prompt, json_mode=False)
+            return {
+                "answer": text[:2000],
+                "review_reason": review_reason,
+                "source": "gemini",
+            }
         prompt = (
             "You are a shipping-document HITL assistant. An email was flagged NEEDS_REVIEW.\n"
-            f"email_id: {email.get('email_id')}\n"
-            f"subject: {email.get('subject')}\n"
-            f"from: {email.get('from')}\n"
-            f"review_reason: {review_reason}\n"
-            f"body (first 2000 chars): {(email.get('body') or '')[:2000]}\n"
-            "attachments:\n" + "\n".join(docs_txt) + "\n\n"
+            + ctx + "\n\n"
             "Reply ONLY as JSON with keys: explanation (2-4 sentences, plain language), "
             "suggested_fix (1-3 concrete next steps), "
             "suggested_category (one of BL_COMPARISON, SI_REQUEST, INVOICE_QUERY, GENERAL, SPAM), "
             "suggested_status (one of OK, MISMATCH, NEEDS_REVIEW)."
         )
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{GEMINI_MODEL}:generateContent?key={key}"
-        )
-        payload = json.dumps({
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "application/json"},
-        }).encode()
-        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=25) as r:
-            data = json.loads(r.read().decode("utf-8", "replace"))
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
-        try:
-            parsed = json.loads(text)
-        except Exception:
-            # model returned prose despite mime request; wrap it
-            return {
-                "explanation": text[:1500],
-                "suggested_fix": fb["suggested_fix"],
-                "suggested_category": fb["suggested_category"],
-                "suggested_status": fb["suggested_status"],
-                "source": "gemini",
-            }
+        text = _gemini_post(prompt, json_mode=True)
+        parsed = json.loads(text)
         return {
-            "explanation": str(parsed.get("explanation", fb["explanation"]))[:2000],
-            "suggested_fix": str(parsed.get("suggested_fix", fb["suggested_fix"]))[:2000],
-            "suggested_category": str(parsed.get("suggested_category", fb["suggested_category"])),
-            "suggested_status": str(parsed.get("suggested_status", fb["suggested_status"])),
+            "explanation": str(parsed.get("explanation", ""))[:2000],
+            "suggested_fix": str(parsed.get("suggested_fix", ""))[:2000],
+            "suggested_category": str(parsed.get("suggested_category", "GENERAL")),
+            "suggested_status": str(parsed.get("suggested_status", "OK")),
+            "review_reason": review_reason,
             "source": "gemini",
         }
-    except Exception as exc:  # offline / quota / bad key -> rules
-        fb = fallback_explain(review_reason)
-        fb["source"] = "fallback"
-        fb["note"] = f"gemini unavailable: {exc}"
-        return fb
+    except Exception as exc:  # quota / network / bad key / bad response
+        return {
+            "error": "gemini_error",
+            "explanation": describe_error(exc),
+            "review_reason": review_reason,
+            "source": "error",
+        }
 
 
 # ---------------------------------------------------------------------------
